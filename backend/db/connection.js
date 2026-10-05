@@ -1,15 +1,15 @@
-//DEPENDANCIES 
 const mongoose = require('mongoose');
 
-const connectDB = async () =>{
-    mongoose.connect(process.env.MONGO_URI, {
+const connectDB = async () => {
+    if (!process.env.MONGO_URI) {
+        throw new Error('MONGO_URI is not set. Add it to backend/.env before connecting to MongoDB.');
+    }
+
+    const { connection } = await mongoose.connect(process.env.MONGO_URI, {
         dbName: 'SheConnect',
     });
-    const db = mongoose.connection;
-
-    db.on('error', (error) => console.log(error.message + 'MongoDB is not running.'));
-    db.on('Connected', () => console.log(`Mongodb successfully connected! Database:${db.name}`));
-    db.on('disconnected', () => console.log('Mongodb has not been connected.'));
+    console.log(`MongoDB successfully connected! Database: ${connection.name}`);
+    return connection;
 };
 
 module.exports = connectDB;
