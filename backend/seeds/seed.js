@@ -1,44 +1,38 @@
-// backend/seeds/seed.js
-import { faker } from '@faker-js/faker';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+const path = require('path');
+const mongoose = require('mongoose');
+const { faker } = require('@faker-js/faker');
+const dotenv = require('dotenv');
+const connectDB = require('../db/connection');
+const User = require('../models/User');
+const Post = require('../models/Post');
 
-// 1. IMPORT DATABASE CONFIGURATION FUNCTION
-import connectDB from '../config/db.js'; 
-
-// 2. IMPORT YOUR MODELS (Needed to actually call .create or .insertMany)
-import User from '../models/User.js';
-import Post from '../models/Post.js';
-
-// Initialize environment variables (so MONGO_URI works)
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const SEED_COUNT_USERS = 10;
 const SEED_COUNT_POSTS_PER_USER = 3;
 
 async function seedDatabase() {
   try {
-    
-    await connectDB(); 
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('Refusing to run a destructive seed script in production.');
+    }
 
-    // Now that we are connected, we can interact with the DB collections
+    await connectDB();
+
     console.log('--- Seeding Process Started ---');
 
-    // Clear existing data (using the User and Post models)
-    await User.deleteMany({});
     await Post.deleteMany({});
+    await User.deleteMany({});
     console.log('Cleared existing Users and Posts collections.');
 
     const createdUsers = [];
 
-    // --- SEED USERS LOOP (Same as explained previously) ---
     console.log('Generating fake users...');
     for (let i = 0; i < SEED_COUNT_USERS; i++) {
       const user = await User.create({
-        username: faker.internet.userName().toLowerCase(),
+        username: faker.internet.username().toLowerCase(),
         email: faker.internet.email().toLowerCase(),
-     
-        password_hash: '$2b$10$e8wF58fKx6HjQW9Z2ZgTGe...fakehash...',
+        password: 'SeedPassword123!',
       });
       createdUsers.push(user);
     }
@@ -48,18 +42,17 @@ async function seedDatabase() {
     console.log('Generating fake posts...');
     const trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester', 'Postpartum'];
 
-    // We loop through each user we just made...
     for (const user of createdUsers) {
-      // ...and create 3 posts for that specific user.
       for (let j = 0; j < SEED_COUNT_POSTS_PER_USER; j++) {
+        const gestationalWeek = faker.number.int({ min: 4, max: 40 });
         postsToInsert.push({
-          user_id: user._id, // This links the post to the user
+          userId: user._id,
           message: faker.lorem.paragraph({ min: 2, max: 4 }),
-          image_url: faker.image.urlLoremFlickr({ category: 'baby' }),
-          gestational_week: faker.number.int({ min: 4, max: 40 }),
-          gestational_day: faker.number.int({ min: 1, max: 7 }),
-          trimester: faker.helpers.arrayElement(trimesters),
-          expected_due_date: faker.date.future({ years: 1 }),
+          imageURL: faker.image.url(),
+          Week: gestationalWeek,
+          Day: faker.number.int({ min: 1, max: 7 }),
+          Trimester: faker.helpers.arrayElement(trimesters),
+          dueDate: faker.date.future({ years: 1 }).toISOString(),
         });
       }
     }
@@ -68,14 +61,12 @@ async function seedDatabase() {
     console.log(`Successfully seeded ${postsToInsert.length} posts.`);
 
     console.log('--- Seeding Completed Successfully! ---');
-
-    process.exit(0); 
-
   } catch (error) {
-    console.error('CRITICAL ERROR DURING SEEDING:', error.message);
-    process.exit(1);
+    console.error('CRITICAL ERROR DURING SEEDING:', error);
+    process.exitCode = 1;
+  } finally {
+    await mongoose.disconnect();
   }
 }
 
-// Start the function
 seedDatabase();
