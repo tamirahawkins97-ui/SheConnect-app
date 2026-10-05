@@ -9,7 +9,6 @@ const postSchema = new mongoose.Schema({
     },
     imageURL:{
         type: String, 
-        required: false
     },
     message: {
         type: String, 
