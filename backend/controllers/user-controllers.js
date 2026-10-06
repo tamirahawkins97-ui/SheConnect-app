@@ -21,7 +21,7 @@ async function registerUser(req, res) {
 
     const payload = { _id: newUser._id, role: newUser.role };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '2d' });
 
     res.status(201).json({ message: "User created successfully!", token });
   } catch(error) {
