@@ -13,10 +13,9 @@ function App(){
     <BrowserRouter>
       <nav>
         <Link to="/">Landing</Link>
-        <Link to="/auth">Auth</Link>
-        <Link to="/feed">Feed (Protected)</Link>
-        <Link to="/social">Social (Protected)</Link>
-        <Link to="/profile">Profile (Protected)</Link>
+        <Link to="/social">Social</Link>
+        <Link to="/profile">My profile</Link>
+        <Link to="/auth">Sign in</Link>
       </nav>
       
       <main>
@@ -25,7 +24,7 @@ function App(){
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
 
-          {/* Protected by a stored login token */}
+          {/* Protected by a valid authenticated session */}
           <Route element={<ProtectedRoute />}>
             <Route path="/feed" element={<Feed />} />
             <Route path="/social" element={<SocialHub />} />

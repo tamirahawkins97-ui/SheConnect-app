@@ -1,9 +1,8 @@
 
-
 function Profile(){
     return(
         <div>
-            <h1>Profile Page(Protected)</h1>
+            <h1>My profile</h1>
         </div>
     )
 }

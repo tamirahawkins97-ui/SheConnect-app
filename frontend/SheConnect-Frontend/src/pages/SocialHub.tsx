@@ -3,7 +3,7 @@
 function SocialHub(){
     return (
         <div>
-            <h1>Social / Chat Hub(protected)</h1>
+            <h1>Social</h1>
         </div>
     )
 }
