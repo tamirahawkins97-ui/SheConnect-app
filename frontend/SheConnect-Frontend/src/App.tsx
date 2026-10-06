@@ -32,6 +32,7 @@ function App() {
           <Route element={<AuthenticatedLayout />}>
             <Route path="/feed" element={<Feed />} />
             <Route path="/social" element={<SocialHub />} />
+            <Route path="/conversations" element={<SocialHub />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
         </Route>

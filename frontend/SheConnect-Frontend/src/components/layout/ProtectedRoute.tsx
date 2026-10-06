@@ -21,7 +21,7 @@ import type { User } from '../../types';
     // 2. Server-side check: confirm token is valid in MongoDB
     async function verifyUser() {
       try {
-        await apiFetch<User>('/api/users/');
+        await apiFetch<{ message: string; user: User }>('/api/users/me');
         setIsAuthenticated(true);
       } catch (err) {
         removeToken();
