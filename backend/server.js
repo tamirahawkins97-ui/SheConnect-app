@@ -34,9 +34,9 @@ const CommentRoutes = require('./routes/CommentRoutes');
 //MOUNT ROUTES 
 
 app.use('/api/posts/:postId/comments', CommentRoutes);
-app.use('/api/comments',  CommentRoutes)
-app.use('/api/conversations', ConversationRoutes);
-app.use('/api/users', UserRoutes)
+app.use('/api/comments/',  CommentRoutes)
+app.use('/api/conversations/', ConversationRoutes);
+app.use('/api/users/', UserRoutes)
 app.use('/api/posts/', PostRoutes);
 
 //PORT 
