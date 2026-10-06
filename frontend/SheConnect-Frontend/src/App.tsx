@@ -1,7 +1,8 @@
-import {BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
+import {BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import  ProtectedRoute from './components/layout/ProtectedRoute';
- 
-import Landing from './pages/Landing';
+import Navbar from './components/layout/Navbar'
+
+import Home from './pages/Landing';
 import Profile from './pages/Profile';
 import SocialHub from './pages/SocialHub';
 import Feed from './pages/Feed';
@@ -11,17 +12,12 @@ import Auth from './pages/Auth';
 function App(){
   return(
     <BrowserRouter>
-      <nav>
-        <Link to="/">Landing</Link>
-        <Link to="/social">Social</Link>
-        <Link to="/profile">My profile</Link>
-        <Link to="/auth">Sign in</Link>
-      </nav>
+      <Navbar/>
       
       <main>
         <Routes>
           {/* Public */}
-          <Route path="/" element={<Landing />} />
+          <Route path="/" element={<Home />} />
           <Route path="/auth" element={<Auth />} />
 
           {/* Protected by a valid authenticated session */}

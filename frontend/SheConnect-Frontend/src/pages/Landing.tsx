@@ -1,11 +1,14 @@
 
 
-function Landing (){
+function Home (){
     return(
         <div>
-            <h1>Landing</h1>
+            <h1>Welcome to SheConnect!</h1>
+            <form>
+                <
+            </form>
         </div>
     )
 };
 
-export default Landing;
+export default Home;
