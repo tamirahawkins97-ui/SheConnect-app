@@ -1,11 +1,13 @@
+import { Link } from 'react-router-dom';
 
+function Landing() {
+  return (
+    <main>
+      <h1>Welcome to SheConnect</h1>
+      <p>A community for connection and support through motherhood.</p>
+      <Link to="/auth">Sign in or create an account</Link>
+    </main>
+  );
+}
 
-function Home (){
-    return(
-        <div>
-            <h1>Welcome to SheConnect!</h1>
-        </div>
-    )
-};
-
-export default Home;
+export default Landing;
