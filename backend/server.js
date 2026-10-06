@@ -4,7 +4,7 @@ const app = express();
 require('dotenv').config();
 const morgan = require('morgan');
 const connectDB = require('./db/connection');
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 1111;
 const cors = require('cors');
 
 //DATABASE CONNECTION
@@ -34,10 +34,10 @@ const CommentRoutes = require('./routes/CommentRoutes');
 //MOUNT ROUTES 
 
 app.use('/api/posts/:postId/comments', CommentRoutes);
-app.use('/api/comments/',  CommentRoutes)
-app.use('/api/conversations/', ConversationRoutes);
-app.use('/api/users/', UserRoutes)
-app.use('/api/posts/', PostRoutes);
+app.use('/api/comments',  CommentRoutes)
+app.use('/api/conversations', ConversationRoutes);
+app.use('/api/users', UserRoutes)
+app.use('/api/posts', PostRoutes);
 
 //PORT 
 app.listen(PORT, () =>{
