@@ -5,9 +5,21 @@ require('dotenv').config();
 const morgan = require('morgan');
 const connectDB = require('./db/connection');
 const PORT = process.env.PORT;
+const cors = require('cors');
 
 //DATABASE CONNECTION
 connectDB();
+
+//CORS middleware Configuration
+app.use(
+    cors({
+        origin: 'http://localhost:5173', //Vite dev server URL
+        credentials: true,  //Allows auth headers, cookies, and tokens.
+        methods: ['GET', 'POST', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization'] //Now granted access to auth headers.
+    })
+);
+
 //MIDDLEWARE
 app.use(express.json());
 app.use(morgan('dev'));
