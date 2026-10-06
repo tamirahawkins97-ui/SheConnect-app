@@ -5,7 +5,7 @@ import { isTokenValid, removeToken } from '../../utils/auth';
 import { apiFetch } from '../../utils/api';
 import type { User } from '../../types';
 
-export default function ProtectedRoute() {
+ function ProtectedRoute() {
   const location = useLocation();
   const [loading, setLoading] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -51,3 +51,5 @@ export default function ProtectedRoute() {
   // 5. User is authenticated, render the requested child route
   return <Outlet />;
 }
+
+export default ProtectedRoute;

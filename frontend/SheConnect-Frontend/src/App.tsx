@@ -1,5 +1,5 @@
 import {BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
-import { ProtectedRoute } from './components/layout/ProtectedRoute';
+import  ProtectedRoute from './components/layout/ProtectedRoute';
  
 import Landing from './pages/Landing';
 import Profile from './pages/Profile';
