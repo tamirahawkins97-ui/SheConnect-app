@@ -1,6 +1,7 @@
 // src/utils/auth.ts
 
-const TOKEN_KEY = 'token';
+const TOKEN_KEY = 'authToken';
+const LEGACY_TOKEN_KEY = 'token';
 
 export interface DecodedToken {
   id?: string;
@@ -14,17 +15,19 @@ export interface DecodedToken {
 
 // 1. Read token from storage
 export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  return localStorage.getItem(TOKEN_KEY) || localStorage.getItem(LEGACY_TOKEN_KEY);
 }
 
 // 2. Save token to storage
 export function setToken(token: string): void {
   localStorage.setItem(TOKEN_KEY, token);
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
 }
 
 // 3. Clear token from storage (logout/expired)
 export function removeToken(): void {
   localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(LEGACY_TOKEN_KEY);
 }
 
 // 4. Safely decode the JWT payload on client side

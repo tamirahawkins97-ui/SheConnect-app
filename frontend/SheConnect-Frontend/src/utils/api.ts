@@ -1,4 +1,5 @@
 // src/utils/api.ts
+import { getToken } from './auth';
 
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: Record<string, unknown> | FormData | null;
@@ -8,7 +9,7 @@ export async function apiFetch<T>(
   endpoint: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const token = localStorage.getItem('token');
+  const token = getToken();
 
   // Base headers
   const headers: HeadersInit = {

@@ -1,1 +1,13 @@
 @import "tailwindcss";
+
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: radial-gradient(circle at top right, #fdf2f8, #fff1f2, #ffffff);
+  min-height: 100vh;
+  color: #4a454e;
+}
+
+h1, h2, h3, .font-glam {
+  font-family: 'Playfair Display', serif;
+}
