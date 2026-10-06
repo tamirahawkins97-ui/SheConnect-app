@@ -1,5 +1,5 @@
 //DEPENDANCIES 
-const User = require("../models/user-model");
+const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
 async function getUser(req, res) {

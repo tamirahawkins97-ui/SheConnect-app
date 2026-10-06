@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { requireAuth } = require('../middleware/authMiddleware');
+const { requireAuth } = require('../middleware/auth-middleware');
 
 const {
   getUserConversations,
@@ -13,8 +13,8 @@ const { verifyToken } = require('../middleware/auth-middleware');
 
 router.use(verifyToken);
 
-router.get('/', requireAuth, getUserConversations);
-router.get('/:id', requireAuth, getConversationByUserId);
-router.patch('/:id', requireAuth, markConversationAsRead);
+router.get('/',  getUserConversations);
+router.get('/:id',  getConversationByUserId);
+router.patch('/:id', markConversationAsRead);
 
 module.exports = router;
