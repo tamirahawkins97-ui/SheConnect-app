@@ -13,7 +13,19 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 
+//Route Imports
+const UserRoutes = require('./routes/UserRoutes');
+const PostRoutes = require('./routes/PostRoutes');
+const ConversationRoutes = require('./routes/ConversationRoutes');
+const CommentRoutes = require('./routes/CommentRoutes');
+
 //MOUNT ROUTES 
+
+app.use('/api/posts/:postId/comments', CommentRoutes);
+app.use('/api/comments',  CommentRoutes)
+app.use('/api/conversations', ConversationRoutes);
+app.use('/api/user', UserRoutes)
+app.use('/api/posts', PostRoutes);
 
 //PORT 
 app.listen(PORT, () =>{
