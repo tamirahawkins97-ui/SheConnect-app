@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiFetch } from '../utils/api';
+import { setToken } from '../utils/auth';
 
-const API_BASE_URL = 'http://localhost:1111/api/users';
+type AuthResponse = { message: string; token: string };
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -17,28 +19,25 @@ export default function LandingPage() {
     setLoading(true);
     setError(null);
 
-    const endpoint = isRegister ? `${API_BASE_URL}/register` : `${API_BASE_URL}/login`;
-    const payload = isRegister ? { name, email, password } : { email, password };
-
     try {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const response = await apiFetch<AuthResponse>(
+        isRegister ? '/api/users/register' : '/api/users/login',
+        {
+          method: 'POST',
+          body: isRegister
+            ? { username: name.trim(), email: email.trim(), password }
+            : { email: email.trim(), password },
+        }
+      );
 
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Action failed.');
-
-      if (isRegister) {
-        setIsRegister(false);
-        setPassword('');
-      } else {
-        if (data.token) localStorage.setItem('authToken', data.token);
-        navigate('/dashboard');
+      if (!response.token) {
+        throw new Error('The server did not return an authentication token.');
       }
-    } catch (err: any) {
-      setError(err.message || 'Something went wrong.');
+
+      setToken(response.token);
+      navigate('/feed', { replace: true });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
       setLoading(false);
     }
@@ -71,7 +70,7 @@ export default function LandingPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {isRegister && (
             <div>
-              <label className="block text-xs font-medium text-zinc-500 mb-1 ml-3">Your Name</label>
+              <label className="block text-xs font-medium text-zinc-500 mb-1 ml-3">Username</label>
               <input
                 type="text"
                 required

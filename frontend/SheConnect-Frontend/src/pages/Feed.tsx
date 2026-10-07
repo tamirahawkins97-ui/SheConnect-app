@@ -92,7 +92,7 @@ function PostEditor({
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-rose-400">Your story matters</p>
           <h2 className="mt-1 font-serif text-xl font-semibold text-zinc-800">{title}</h2>
         </div>
-        <button className="rounded-full p-2 text-zinc-400 transition hover:scale-105 hover:bg-rose-50 hover:text-rose-500 active:scale-95" type="button" onClick={onCancel} aria-label="Close editor">
+        <button className="rounded-full p-2 text-zinc-400 transition hover:scale-105 hover:bg-rose-50 hover:text-rose-500 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95" type="button" onClick={onCancel} aria-label="Close editor">
           <X size={18} />
         </button>
       </div>
@@ -288,13 +288,13 @@ export default function Feed() {
             <h2 className="font-serif text-lg font-semibold text-zinc-800">Your space</h2>
           </div>
           <nav className="grid grid-cols-3 gap-2 md:grid-cols-1" aria-label="Feed navigation">
-            <Link className="flex items-center gap-3 rounded-full bg-rose-50 px-3 py-3 text-xs font-semibold text-rose-600 ring-1 ring-rose-100 transition hover:scale-[1.02] sm:text-sm" to="/feed">
+            <Link className="flex items-center gap-3 rounded-full bg-rose-50 px-3 py-3 text-xs font-semibold text-rose-600 ring-1 ring-rose-100 transition hover:scale-[1.02] hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] active:scale-95 sm:text-sm" to="/feed">
               <MessageCircle size={17} /> Feed
             </Link>
-            <Link className="flex items-center gap-3 rounded-full px-3 py-3 text-xs font-medium text-zinc-600 transition hover:scale-[1.02] hover:bg-rose-50 hover:text-rose-600 sm:text-sm" to="/conversations">
+            <Link className="flex items-center gap-3 rounded-full px-3 py-3 text-xs font-medium text-zinc-600 transition hover:scale-[1.02] hover:bg-rose-50 hover:text-rose-600 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] active:scale-95 sm:text-sm" to="/conversations">
               <Users size={17} className="text-rose-400" /> Social Hub
             </Link>
-            <Link className="flex items-center gap-3 rounded-full px-3 py-3 text-xs font-medium text-zinc-600 transition hover:scale-[1.02] hover:bg-rose-50 hover:text-rose-600 sm:text-sm" to="/profile">
+            <Link className="flex items-center gap-3 rounded-full px-3 py-3 text-xs font-medium text-zinc-600 transition hover:scale-[1.02] hover:bg-rose-50 hover:text-rose-600 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] active:scale-95 sm:text-sm" to="/profile">
               <Settings size={17} className="text-rose-400" /> Profile
             </Link>
           </nav>

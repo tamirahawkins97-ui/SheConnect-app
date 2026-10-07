@@ -1,11 +1,10 @@
 import { useState, type FormEvent } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import { setToken } from '../utils/auth';
 
 type AuthMode = 'signin' | 'signup';
 type AuthResponse = { message: string; token: string };
-type RedirectState = { from?: { pathname?: string } };
 
 function Auth() {
   const [mode, setMode] = useState<AuthMode>('signin');
@@ -15,9 +14,7 @@ function Auth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const location = useLocation();
   const navigate = useNavigate();
-  const redirectState = location.state as RedirectState | null;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,7 +41,7 @@ function Auth() {
 
       setToken(response.token);
       setSuccess(isRegister ? 'Your account is ready. Welcome to SheConnect!' : 'You’re signed in. Welcome back!');
-      navigate(redirectState?.from?.pathname || '/feed', { replace: true });
+      navigate('/feed', { replace: true });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to connect. Please try again.');
     } finally {

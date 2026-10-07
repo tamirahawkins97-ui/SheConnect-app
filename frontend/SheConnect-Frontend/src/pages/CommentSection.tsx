@@ -159,7 +159,7 @@ export default function CommentSection({ postId }: CommentSectionProps) {
             disabled={submitting}
           />
           <button
-            className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-rose-400 to-pink-500 text-white shadow-md shadow-rose-200/60 transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-md shadow-rose-200/60 transition hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 disabled:active:scale-100"
             type="submit"
             aria-label="Post comment"
             disabled={!text.trim() || submitting}
