@@ -364,7 +364,7 @@ export default function Feed() {
           {!loadingPosts && posts.map((post) => {
             const isOwner = Boolean(currentUser?._id && postOwnerId(post) === currentUser._id);
             return (
-              <article className="relative rounded-3xl border border-rose-100/80 bg-white/85 p-4 shadow-[0_10px_30px_rgba(244,63,94,0.06)] backdrop-blur-xl sm:p-5" key={post._id}>
+              <article className="feed-post-card relative rounded-3xl border border-rose-100/80 bg-white/85 p-4 shadow-[0_10px_30px_rgba(244,63,94,0.06)] backdrop-blur-xl sm:p-5" key={post._id}>
                 {isOwner && (
                   <button className="absolute right-5 top-5 z-10 inline-flex items-center gap-1.5 rounded-full border border-rose-100 bg-white/95 px-3 py-2 text-xs font-semibold text-rose-500 shadow-sm transition hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95" type="button" onClick={() => { setEditor(post._id); setEditorError(''); }}>
                     <Pencil size={13} /> Edit
@@ -387,7 +387,7 @@ export default function Feed() {
                   </div>
                 </div>
 
-                <div className="relative flex min-h-56 items-center justify-center overflow-hidden rounded-2xl border border-rose-100/80 bg-gradient-to-br from-[#fff8f8] via-[#fbeff3] to-[#f6e5ed] sm:min-h-72">
+                <div className="feed-post-image-frame relative flex min-h-56 items-center justify-center overflow-hidden rounded-2xl border border-rose-100/80 bg-gradient-to-br from-[#fff8f8] via-[#fbeff3] to-[#f6e5ed] sm:min-h-72">
                   {post.imageURL ? (
                     <img className="absolute inset-0 h-full w-full object-cover" src={post.imageURL} alt={`Photo shared by ${postAuthor(post)}`} loading="lazy" />
                   ) : (
@@ -396,20 +396,20 @@ export default function Feed() {
                       <span className="font-serif text-lg">A little moment from the journey</span>
                     </div>
                   )}
-                  <span className="absolute bottom-3 left-3 rounded-full border border-white/70 bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose-600 shadow-sm backdrop-blur">
+                  <span className="feed-post-meta-chip absolute bottom-3 left-3 rounded-full border border-white/70 bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose-600 shadow-sm backdrop-blur">
                     Day {post.Day}
                   </span>
-                  <span className="absolute bottom-3 right-3 rounded-full border border-white/70 bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose-600 shadow-sm backdrop-blur">
+                  <span className="feed-post-meta-chip absolute bottom-3 right-3 rounded-full border border-white/70 bg-white/85 px-3 py-1.5 text-xs font-semibold text-rose-600 shadow-sm backdrop-blur">
                     Week {post.Week}
                   </span>
                 </div>
 
                 <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
                   <span className="rounded-full bg-rose-50 px-3 py-1.5 font-semibold text-rose-600">{post.Trimester}</span>
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#fbf5ee] px-3 py-1.5 text-zinc-600"><CalendarDays size={13} className="text-amber-600" /> Due {formatDueDate(post.dueDate)}</span>
+                  <span className="feed-due-date inline-flex items-center gap-1.5 rounded-full bg-[#fbf5ee] px-3 py-1.5 text-zinc-600"><CalendarDays size={13} className="feed-due-icon text-amber-600" /> Due {formatDueDate(post.dueDate)}</span>
                 </div>
 
-                <div className="mt-4 rounded-2xl border border-rose-100/80 bg-rose-50/55 px-4 py-3.5">
+                <div className="feed-post-caption mt-4 rounded-2xl border border-rose-100/80 bg-rose-50/55 px-4 py-3.5">
                   <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-rose-400">A little note</p>
                   <p className="whitespace-pre-wrap break-words text-sm leading-6 text-zinc-700">{post.message}</p>
                 </div>

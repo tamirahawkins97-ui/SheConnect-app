@@ -335,10 +335,10 @@ export default function ProfilePage() {
 
           {/* Month Indicator & Calendar Icon */}
           <div className="flex items-center gap-3">
-            <span className="px-4 py-1 rounded-full text-xs font-semibold bg-white/80 border border-rose-200 text-rose-600 shadow-sm">
+            <span className="profile-month-badge px-4 py-1 rounded-full text-xs font-semibold bg-white/80 border border-rose-200 text-rose-600 shadow-sm">
               Month {selectedMonth}
             </span>
-            <div className="p-2 rounded-full bg-white/80 border border-rose-200 text-rose-500 shadow-sm">
+            <div className="profile-calendar-icon p-2 rounded-full bg-white/80 border border-rose-200 text-rose-500 shadow-sm" aria-label="Due date calendar">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
@@ -597,7 +597,7 @@ export default function ProfilePage() {
               const query = postSearch.trim().toLowerCase();
               return !query || post._id.toLowerCase().includes(query) || post.message.toLowerCase().includes(query);
             }).map((post) => (
-              <article key={post._id} className="overflow-hidden rounded-3xl border border-rose-100/80 bg-white/80 shadow-[0_10px_30px_rgba(244,63,94,0.06)]">
+              <article key={post._id} className="profile-post-card overflow-hidden rounded-3xl border border-rose-100/80 bg-white/80 shadow-[0_10px_30px_rgba(244,63,94,0.06)]">
                 {post.imageURL ? (
                   <img src={post.imageURL} alt="" className="h-48 w-full object-cover" />
                 ) : (
