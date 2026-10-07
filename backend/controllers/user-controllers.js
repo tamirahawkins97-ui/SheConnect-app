@@ -217,7 +217,7 @@ async function deleteAccount(req, res) {
     );
     await Conversation.deleteMany({
       type: "group",
-      participants: { $size: 1 },
+      $expr: { $lt: [{ $size: "$participants" }, 3] },
     });
 
     await User.deleteOne({ _id: currentUserId });

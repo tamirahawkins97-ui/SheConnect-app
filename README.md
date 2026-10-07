@@ -1,46 +1,76 @@
-
 # SheConnect
 
-**SheConnect** is a full-stack community support application designed to provide expectant mothers and women navigating major life transitions with safe, accessible environments to find guidance, peer community, and verified resources.
+SheConnect is a full-stack maternal community application for sharing pregnancy and family moments, discussing posts, and connecting with other members through direct and group conversations. Members can manage their profile, find their own posts by ID, choose light or dark appearance, and control presence and direct-message preferences.
 
----
+## Features
 
-## The Inspiration
+- Authenticated community feed with post creation, editing, and deletion.
+- Post comments, including author-owned comment deletion.
+- Profile management, post search by ID, pregnancy stage, avatar, and account settings.
+- Direct and group conversations with message timestamps and read receipts.
+- Optional active-presence and direct-message preferences.
+- Veteran Mommy access verified by a protected backend role check; public registration cannot assign this role.
+- JWT authentication, RESTful Express routes, and MongoDB persistence.
 
-This project was built from a deeply personal space: my sister’s pregnancy journey. 
+## Stack
 
-Watching someone you care about navigate the vulnerability, questions, and physical and emotional shifts of pregnancy highlighted a crucial gap: how difficult it can often be to find a genuinely safe, trustworthy digital space tailored to maternal guidance. I wanted to design an environment where expectant mothers don't just search for static advice, but can connect with supportive peers, find vetted local and digital maternal health resources, and seek guidance without judgment.
+- Frontend: React, TypeScript, Vite, and Tailwind CSS.
+- Backend: Node.js, Express, and Mongoose.
+- Database: MongoDB.
 
-SheConnect was conceived as that safe harbor—combining empathetic community design with reliable engineering.
+## Run locally
 
----
+Requirements: Node.js `>=20.19.0`, npm, and a running MongoDB instance.
 
-## Core Architecture & Engineering
+1. Configure the backend:
 
-I designed and engineered the end-to-end full-stack foundation for SheConnect, handling architecture decisions from database structuring to client-side consumption:
+   ```powershell
+   cd backend
+   npm install
+   Copy-Item .env.example .env
+   ```
 
-* **Full CRUD Operations:** Implemented comprehensive Create, Read, Update, and Delete lifecycles across all core domain models (user profiles, resource directory entries, discussion threads, and bookmarks).
-* **Client–Server Integration:** Configured RESTful routing, asynchronous API handlers, data parsing, and HTTP status handling to ensure fast, reliable communication between the backend server and front-end interface.
-* **Configuration & Environment Management:** Structured database connections, secure environment configuration, CORS setup, and route middleware for protected endpoints.
-* **Data Flow & State:** Built predictable data patterns on the client to handle network requests, optimistic UI updates, and error states gracefully.
+   Update `backend/.env` with a valid `MONGO_URI`, a strong random `JWT_SECRET`, and `CORS_ORIGINS` containing the frontend origin (local development defaults to `http://localhost:5173`).
 
----
+2. In one terminal, start the backend:
 
-## AI-Assisted Development Workflow
+   ```powershell
+   cd backend
+   npm start
+   ```
 
-Throughout the build, modern AI developer tooling was incorporated as an active pair programmer to accelerate development and uphold production standards:
+3. In another terminal, start the frontend:
 
-* **Component Mounting & Architecture:** Leveraged AI assistance during the initial mounting, structuring, and lifecycle setup of complex interactive UI components, ensuring consistent prop drilling avoidance and clean component separation.
-* **Design & Layout Acceleration:** Utilized AI to speed up boilerplate UI drafting, responsive layout scaffolding, and accessible component behaviors.
-* **Production Readiness & Debugging:** Applied AI workflows to stress-test edge cases in API routing, optimize error-handling middleware, and streamline production build configurations.
+   ```powershell
+   cd frontend/SheConnect-Frontend
+   npm install
+   npm run dev
+   ```
 
----
+   Open `http://localhost:5173`. Vite proxies `/api` requests to the backend at `http://localhost:1111`.
 
-## Key Features
+For production, configure the frontend hosting/reverse proxy to route `/api` to the backend and set `CORS_ORIGINS` to the deployed frontend origin. Do not commit `.env` files or use development secrets in production.
 
-- **Safe Community Hub:** Spaces for expectant mothers to share experiences, ask sensitive questions, and connect with peers.
-- **Resource Directory:** Curated, filterable directory of maternal health resources, postpartum care, and verified clinics.
-- **User Dashboard:** Personalized hub to manage saved guidance articles, community contributions, and personal milestones.
-- **Secure Endpoints:** Server validation and sanitization on all user input to protect community integrity.
+## Validation
 
----
+Run the backend controller tests:
+
+```powershell
+cd backend
+npm test
+```
+
+The backend tests use Node's built-in test runner and mocked model methods; they do not require MongoDB. Validate the frontend:
+
+```powershell
+cd frontend/SheConnect-Frontend
+npm run lint
+npm run build
+```
+
+For backend API and database integration, start the app with a configured MongoDB database and verify the user, post, comment, and conversation flows in the running application.
+
+## Documentation
+
+- [Frontend setup, routes, and API connectivity](frontend/SheConnect-Frontend/README.md)
+- [Backend setup, authentication, REST API, and CRUD behavior](backend/README.md)

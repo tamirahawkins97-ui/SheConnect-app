@@ -6,14 +6,25 @@ const morgan = require('morgan');
 const connectDB = require('./db/connection');
 const PORT = process.env.PORT || 1111;
 const cors = require('cors');
+const allowedOrigins = new Set(
+    (process.env.CORS_ORIGINS || 'http://localhost:5173')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+);
 
 //CORS middleware Configuration
 app.use(
     cors({
-        origin: 'http://localhost:5173', //Vite dev server URL
-        credentials: true,  //Allows auth headers, cookies, and tokens.
-        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization'] //Now granted access to auth headers.
+        origin(origin, callback) {
+            if (!origin || allowedOrigins.has(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error('Origin is not allowed by CORS.'));
+        },
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization']
     })
 );
 

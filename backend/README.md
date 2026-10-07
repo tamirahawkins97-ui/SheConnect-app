@@ -14,10 +14,17 @@ The SheConnect backend is a Node.js, Express, and MongoDB API for user authentic
 
 -----------------------Full dependancies allocated in  `package.json` -----------------------
 
+## Setup and tests
+
+From `backend/`, install dependencies with `npm install`, copy `.env.example` to `.env`, then set `MONGO_URI` and replace `JWT_SECRET` with a cryptographically random value. Set `CORS_ORIGINS` to a comma-separated list of exact frontend origins; local development defaults to `http://localhost:5173`. The frontend host must route `/api` requests to this backend in production.
+
+Run `npm test` to execute the backend controller tests. The tests use Node's built-in test runner and mocked model methods, so they do not require a running MongoDB instance. End-to-end verification still requires a configured MongoDB database and running frontend/backend.
+
 ## Request and authentication conventions
 
 - API routes are mounted under `/api`.
 - JSON request bodies are supported; the JSON body limit is 10 MB.
+- CORS allows the configured frontend origins and includes `PATCH` for presence and message read-status requests.
 - Protected routes expect `Authorization: Bearer <token>`.
 - Registration returns a JWT with a two-day lifetime. Login returns a JWT with a one-day lifetime.
 - The signed JWT contains the user's `_id` and `role`. Route middleware verifies it with `JWT_SECRET` and makes the decoded claims available as `req.user`.
