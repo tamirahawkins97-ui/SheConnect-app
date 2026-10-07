@@ -255,3 +255,88 @@ h1, h2, h3, .font-glam {
 .animate-soft-pulse {
   animation: softPulse 2.8s infinite ease-in-out;
 }
+
+/* ─── OPTIONAL DARK APPEARANCE ─── */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-blush-50: #191519;
+  --color-blush-100: #241c22;
+  --color-blush-200: #382630;
+  --color-warm-espresso: #f4eaf0;
+  --color-soft-cocoa: #d2b8c5;
+  --color-rose-50: #281d25;
+  --color-rose-100: #3b2632;
+  --color-rose-200: #573343;
+  --color-rose-300: #a9657c;
+  --color-pink-50: #281d25;
+  --color-pink-100: #3b2632;
+  --color-pink-200: #573343;
+}
+
+:root[data-theme='dark'] body {
+  background: #191519;
+  color: #f4eaf0;
+}
+
+:root[data-theme='dark'] .glam-page {
+  background:
+    radial-gradient(circle at top right, rgba(70, 38, 53, 0.4), transparent 44%),
+    linear-gradient(145deg, #191519 0%, #211920 52%, #241d1a 100%);
+  color: #f4eaf0;
+}
+
+:root[data-theme='dark'] [class*='bg-white'],
+:root[data-theme='dark'] [class*='bg-rose-50'],
+:root[data-theme='dark'] [class*='bg-rose-100'],
+:root[data-theme='dark'] [class*='bg-pink-50'],
+:root[data-theme='dark'] [class*='bg-pink-100'],
+:root[data-theme='dark'] [class*='bg-[#fff'] {
+  background-color: rgba(43, 33, 41, 0.92) !important;
+}
+
+:root[data-theme='dark'] [class*='text-zinc-'],
+:root[data-theme='dark'] [class*='text-[#4a'],
+:root[data-theme='dark'] [class*='text-[#2e']:not([class*='text-transparent']) {
+  color: #e8dce4 !important;
+}
+
+:root[data-theme='dark'] [class*='text-rose-300'],
+:root[data-theme='dark'] [class*='text-rose-400'],
+:root[data-theme='dark'] [class*='text-rose-500'],
+:root[data-theme='dark'] [class*='text-rose-600'],
+:root[data-theme='dark'] [class*='text-pink-300'],
+:root[data-theme='dark'] [class*='text-pink-400'] {
+  color: #f0a9c1 !important;
+}
+
+:root[data-theme='dark'] [class*='border-rose-'],
+:root[data-theme='dark'] [class*='border-pink-'] {
+  border-color: rgba(201, 125, 150, 0.3) !important;
+}
+
+:root[data-theme='dark'] input,
+:root[data-theme='dark'] textarea,
+:root[data-theme='dark'] select {
+  background-color: #241c22;
+  color: #f4eaf0;
+  border-color: rgba(201, 125, 150, 0.42);
+}
+
+:root[data-theme='dark'] input::placeholder,
+:root[data-theme='dark'] textarea::placeholder {
+  color: #b8a5b0;
+}
+
+:root[data-theme='dark'] .brand-tagline {
+  color: #d2a0b2;
+}
+
+:root[data-theme='dark'] .brand-mark {
+  box-shadow: 0 3px 14px rgba(0, 0, 0, 0.38);
+}
+
+:root[data-theme='dark'] .glam-card {
+  background: rgba(43, 33, 41, 0.92);
+  border-color: rgba(201, 125, 150, 0.3);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.35);
+}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../assets/Logo.jpg';
+import AppearanceControl from '../components/layout/AppearanceControl';
 
 const API_BASE = 'http://localhost:1111/api/users';
 
@@ -130,6 +131,14 @@ export default function SettingsPage() {
           <h1 className="text-3xl font-serif font-bold text-zinc-800">Account & Privacy Settings</h1>
           <p className="text-xs text-zinc-400 mt-1">Manage your mama credentials, visibility, and notification preferences.</p>
         </div>
+
+        <section className="flex flex-col gap-4 rounded-[2rem] border border-rose-100 bg-white/80 p-6 shadow-[0_10px_30px_rgba(244,63,94,0.04)] sm:flex-row sm:items-center sm:justify-between" aria-labelledby="appearance-heading">
+          <div>
+            <h2 id="appearance-heading" className="font-serif text-lg font-bold text-zinc-800">Appearance</h2>
+            <p className="mt-1 text-xs text-zinc-500">Choose light or dark mode. Your preference is saved on this device.</p>
+          </div>
+          <AppearanceControl />
+        </section>
 
         {successMsg && (
           <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 text-xs text-center font-medium shadow-sm">

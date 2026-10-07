@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import { setToken } from '../utils/auth';
 import Brand from '../components/layout/Brand';
+import AppearanceControl from '../components/layout/AppearanceControl';
 
 type AuthResponse = { message: string; token: string };
 
@@ -52,7 +53,10 @@ export default function LandingPage() {
 
       {/* Main Glass Card */}
       <div className="glam-card relative w-full max-w-md p-8">
-        <Brand to="/" className="mx-auto mb-7 w-fit" />
+        <div className="absolute right-5 top-5">
+          <AppearanceControl />
+        </div>
+        <Brand to="/" className="mx-auto mb-7 mt-12 w-fit" />
         <div className="text-center mb-8">
           <span className="text-xs uppercase tracking-widest text-rose-400 font-semibold">Welcome Darling</span>
           <h1 className="text-3xl font-glam text-zinc-800 mt-1 mb-2">

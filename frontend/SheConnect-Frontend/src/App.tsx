@@ -12,6 +12,7 @@ import Auth from './pages/Auth';
 import Settings from './pages/Settings';
 import CreatePostCard from './components/feed/CreatePostCard';
 import { isTokenValid } from './utils/auth';
+import { ThemeProvider } from './contexts/ThemeContext';
 
 function LandingRoute() {
   return isTokenValid() ? <Navigate to="/feed" replace /> : <Home />;
@@ -59,28 +60,30 @@ function AuthenticatedLayout() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Public */}
-        <Route path="/" element={<LandingRoute />} />
-        <Route path="/auth" element={<Auth />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* Public */}
+          <Route path="/" element={<LandingRoute />} />
+          <Route path="/auth" element={<Auth />} />
 
-        {/* Navigation and app pages are only shown after session verification */}
-        <Route element={<ProtectedRoute />}>
-          <Route element={<AuthenticatedLayout />}>
-            <Route path="/feed" element={<Feed />} />
-            <Route path="/create-post" element={<CreatePostCard />} />
-            <Route path="/social" element={<SocialHub />} />
-            <Route path="/conversations" element={<SocialHub />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/settings" element={<Settings />} />
+          {/* Navigation and app pages are only shown after session verification */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<AuthenticatedLayout />}>
+              <Route path="/feed" element={<Feed />} />
+              <Route path="/create-post" element={<CreatePostCard />} />
+              <Route path="/social" element={<SocialHub />} />
+              <Route path="/conversations" element={<SocialHub />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/settings" element={<Settings />} />
+            </Route>
           </Route>
-        </Route>
 
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
