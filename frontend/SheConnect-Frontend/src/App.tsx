@@ -8,7 +8,6 @@ import Home from './pages/Landing';
 import Profile from './pages/Profile';
 import SocialHub from './pages/SocialHub';
 import Feed from './pages/Feed';
-import Auth from './pages/Auth';
 import Settings from './pages/Settings';
 import CreatePostCard from './components/feed/CreatePostCard';
 import { isTokenValid } from './utils/auth';
@@ -65,7 +64,7 @@ function App() {
         <Routes>
           {/* Public */}
           <Route path="/" element={<LandingRoute />} />
-          <Route path="/auth" element={<Auth />} />
+          <Route path="/auth" element={<Navigate to="/" replace />} />
 
           {/* Navigation and app pages are only shown after session verification */}
           <Route element={<ProtectedRoute />}>

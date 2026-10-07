@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
-import { setToken } from '../utils/auth';
+import { removeToken, setToken } from '../utils/auth';
 import Brand from '../components/layout/Brand';
 import AppearanceControl from '../components/layout/AppearanceControl';
+import { ShieldCheck, Users } from 'lucide-react';
 
 type AuthResponse = { message: string; token: string };
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
+  const [isVeteranLogin, setIsVeteranLogin] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -37,8 +39,12 @@ export default function LandingPage() {
       }
 
       setToken(response.token);
+      if (isVeteranLogin) {
+        await apiFetch<{ message: string }>('/api/users/admin');
+      }
       navigate('/feed', { replace: true });
     } catch (err: unknown) {
+      if (isVeteranLogin) removeToken();
       setError(err instanceof Error ? err.message : 'Something went wrong.');
     } finally {
       setLoading(false);
@@ -58,14 +64,52 @@ export default function LandingPage() {
         </div>
         <Brand to="/" className="mx-auto mb-7 mt-12 w-fit" />
         <div className="text-center mb-8">
-          <span className="text-xs uppercase tracking-widest text-rose-400 font-semibold">Welcome Darling</span>
+          <span className="text-xs uppercase tracking-widest text-rose-400 font-semibold">
+            {isVeteranLogin ? 'Veteran Mommy Access' : 'Welcome Darling'}
+          </span>
           <h1 className="text-3xl font-glam text-zinc-800 mt-1 mb-2">
-            {isRegister ? 'Create an Account' : 'Welcome Back'}
+            {isRegister ? 'Create an Account' : isVeteranLogin ? 'Welcome Back, Veteran' : 'Welcome Back'}
           </h1>
           <p className="text-sm text-zinc-400 font-light">
-            {isRegister ? 'Step inside to join the circle.' : 'Sign in to access your space.'}
+            {isRegister
+              ? 'Step inside to join the circle.'
+              : isVeteranLogin
+                ? 'Sign in with your approved Veteran Mommy account.'
+                : 'Sign in to access your space.'}
           </p>
         </div>
+
+        {!isRegister && (
+          <div className="mb-6 grid grid-cols-2 gap-2 rounded-2xl border border-rose-100 bg-rose-50/50 p-1.5" aria-label="Choose sign-in type">
+            <button
+              type="button"
+              aria-pressed={!isVeteranLogin}
+              onClick={() => { setIsVeteranLogin(false); setError(null); }}
+              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-95 ${
+                !isVeteranLogin ? 'bg-white text-rose-700 shadow-sm' : 'text-zinc-500 hover:text-rose-600'
+              }`}
+            >
+              <Users size={15} aria-hidden="true" />
+              Community Login
+            </button>
+            <button
+              type="button"
+              aria-pressed={isVeteranLogin}
+              onClick={() => { setIsVeteranLogin(true); setError(null); }}
+              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold transition-all hover:scale-[1.02] active:scale-95 ${
+                isVeteranLogin ? 'bg-white text-rose-700 shadow-sm' : 'text-zinc-500 hover:text-rose-600'
+              }`}
+            >
+              <ShieldCheck size={15} aria-hidden="true" />
+              Veteran Mommy
+            </button>
+          </div>
+        )}
+        {!isRegister && isVeteranLogin && (
+          <p className="-mt-3 mb-5 text-center text-xs leading-5 text-zinc-500">
+            Veteran access is confirmed securely by the server. This option is only for accounts already assigned the Veteran Mommy role.
+          </p>
+        )}
 
         {error && (
           <div className="mb-5 p-3 rounded-2xl bg-rose-50/80 border border-rose-200/60 text-rose-600 text-xs text-center font-medium">
@@ -118,7 +162,13 @@ export default function LandingPage() {
             disabled={loading}
             className="glam-btn-primary mt-4 w-full disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? 'Please wait...' : isRegister ? 'Join Now ✨' : 'Sign In ✨'}
+            {loading
+              ? 'Please wait...'
+              : isRegister
+                ? 'Join Now ✨'
+                : isVeteranLogin
+                  ? 'Verify Veteran Access'
+                  : 'Sign In ✨'}
           </button>
         </form>
 
@@ -129,6 +179,7 @@ export default function LandingPage() {
             type="button"
             onClick={() => {
               setIsRegister(!isRegister);
+              setIsVeteranLogin(false);
               setError(null);
             }}
             className="text-rose-500 font-semibold hover:text-rose-600 transition-colors ml-1 underline decoration-rose-200 underline-offset-4"
