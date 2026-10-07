@@ -41,6 +41,8 @@ All request and response bodies below are JSON unless otherwise noted.
 
 Passwords are hashed by the User model before saving and compared with bcrypt during login. Public registration accepts only `username`, `email`, and `password`; a new account receives the default `user` role. Veteran Mommy accounts must be granted that role through a trusted administrative process, never through public registration. The landing page's Veteran Mommy sign-in option validates credentials and then calls `/api/users/admin`; the backend middleware makes the role decision and rejects other roles with `403`. User self-service profile update and account deletion routes are **not currently registered** in `UserRoutes.js`.
 
+Self-service profile updates are registered at `PUT /api/users/profile`. They accept only supported profile and privacy fields; password changes require the current password. Account deletion is registered at `DELETE /api/users/me` and removes the user's posts and related comments, direct conversations, and group participation/messages. The `allowDirectMessages` setting is enforced when creating or sending direct conversations, while `showActiveStatus` controls presence visibility.
+
 ### Posts
 
 All `/api/posts` routes require a bearer token.

@@ -14,7 +14,9 @@ const userSchema = new mongoose.Schema({
     email:{
         type:String, 
         required:[true, 'Email is required.'],
-        match: [/.+@.+\..+/, "Please provide a valid email addres."]
+        match: [/.+@.+\..+/, "Please provide a valid email addres."],
+        lowercase: true,
+        trim: true
     },
     password:{
         type:String, 
@@ -30,6 +32,24 @@ const userSchema = new mongoose.Schema({
     avatar: {
         type: String,
         trim: true
+    },
+    pregnancyMonth: {
+        type: Number,
+        min: [1, 'Pregnancy month must be between 1 and 9.'],
+        max: [9, 'Pregnancy month must be between 1 and 9.'],
+    },
+    momStatus: {
+        type: String,
+        enum: ['1st Trimester', '2nd Trimester', '3rd Trimester', 'Newborn Season', 'Toddler Pro'],
+        default: '2nd Trimester',
+    },
+    showActiveStatus: {
+        type: Boolean,
+        default: true,
+    },
+    allowDirectMessages: {
+        type: Boolean,
+        default: true,
     },
     lastSeenAt: {
         type: Date,

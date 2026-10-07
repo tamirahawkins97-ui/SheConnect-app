@@ -122,9 +122,12 @@ async function createConversation(req, res) {
         return res.status(400).json({ message: 'Choose a valid person to message.' });
       }
 
-      const recipient = await User.findById(recipientId).select('_id');
+      const recipient = await User.findById(recipientId).select('_id allowDirectMessages');
       if (!recipient) {
         return res.status(404).json({ message: 'The selected person could not be found.' });
+      }
+      if (recipient.allowDirectMessages === false) {
+        return res.status(403).json({ message: 'This person is not accepting direct messages.' });
       }
 
       conversation = await Conversation.findOne({
@@ -232,6 +235,18 @@ async function sendConversationMessage(req, res) {
 
     if (!conversation) {
       return res.status(404).json({ message: 'Conversation not found.' });
+    }
+
+    if (conversation.type === 'direct') {
+      const recipientId = conversation.participants.find(
+        (participantId) => participantId.toString() !== currentUserId.toString()
+      );
+      const recipient = recipientId
+        ? await User.findById(recipientId).select('allowDirectMessages')
+        : null;
+      if (recipient?.allowDirectMessages === false) {
+        return res.status(403).json({ message: 'This person is not accepting direct messages.' });
+      }
     }
 
     conversation.messages.push({ sender: currentUserId, text });
