@@ -1,13 +1,257 @@
 @import "tailwindcss";
 
-
+/* ─── LUXURY TYPOGRAPHY & FOUNDATION ─── */
 body {
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background: radial-gradient(circle at top right, #fdf2f8, #fff1f2, #ffffff);
+  background: radial-gradient(circle at top right, #fff8f6 0%, #fdf2f4 45%, #faf4f0 100%);
   min-height: 100vh;
-  color: #4a454e;
+  color: #2e1a22; /* Deep warm espresso plum instead of flat cool gray */
 }
 
 h1, h2, h3, .font-glam {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+/* ─── BASE RESET & CULTURE-INFUSED LUXE PALETTE ─── */
+@layer base {
+  :root {
+    /* Cream, Warm Vanilla & Sheer Rose Bases */
+    --color-blush-50: #fff8f7;
+    --color-blush-100: #faebec;
+    --color-blush-200: #f4dcd9;
+
+    /* Melanin, Amber & Warm Gold Accents */
+    --color-warm-espresso: #2e1a22;
+    --color-soft-cocoa: #63434d;
+    --color-rich-berry: #9f1239;
+    --color-rose-gold: #c97d60;
+    --color-champagne-gold: #d4a373;
+    
+    /* Radiant Glows */
+    --color-radiant-glow: rgba(201, 125, 96, 0.35);
+    --color-berry-glow: rgba(190, 24, 93, 0.25);
+
+    /* Keep existing Tailwind rose/pink utilities aligned with the SheConnect palette. */
+    --color-rose-50: #fff8f7;
+    --color-rose-100: #faebec;
+    --color-rose-200: #f4dcd9;
+    --color-rose-300: #e7b9b5;
+    --color-rose-400: #c97d60;
+    --color-rose-500: #be185d;
+    --color-rose-600: #9f1239;
+    --color-rose-700: #881337;
+    --color-pink-50: #fff8f7;
+    --color-pink-100: #faebec;
+    --color-pink-200: #f4dcd9;
+    --color-pink-300: #e7b9b5;
+    --color-pink-400: #db2777;
+    --color-pink-500: #be185d;
+  }
+
+  html,
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--color-blush-50);
+    color: var(--color-warm-espresso);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Editorial Serif Headers with Warm Letter-spacing */
+  h1, h2, h3, .font-serif, .font-glam {
+    font-family: 'Playfair Display', Georgia, serif;
+    letter-spacing: -0.015em;
+    color: var(--color-warm-espresso);
+  }
+}
+
+/* ─── SOFT-GLAM REUSABLE COMPONENT CLASSES ─── */
+@layer components {
+  .glam-page {
+    min-height: 100vh;
+    background:
+      radial-gradient(circle at top right, rgba(255, 248, 246, 0.96), transparent 44%),
+      linear-gradient(145deg, #fffdfc 0%, #fff8f7 52%, #faf4f0 100%);
+    color: var(--color-warm-espresso);
+  }
+
+  .brand-lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+  }
+
+  .brand-mark {
+    position: relative;
+    display: block;
+    width: 3.25rem;
+    height: 3.25rem;
+    flex: 0 0 3.25rem;
+    overflow: hidden;
+    border-radius: 50%;
+    background: #fff8f7;
+    box-shadow: 0 3px 12px rgba(201, 125, 96, 0.2);
+    transition: transform 0.2s ease;
+  }
+
+  .brand-mark img {
+    position: absolute;
+    top: -14%;
+    left: 50%;
+    width: 300%;
+    max-width: none;
+    height: auto;
+    transform: translateX(-50%);
+  }
+
+  .brand-lockup:hover .brand-mark {
+    transform: translateY(-2px) scale(1.04);
+  }
+
+  .brand-wordmark {
+    display: block;
+    background: linear-gradient(110deg, #9f1239 0%, #be185d 55%, #c97d60 100%);
+    background-clip: text;
+    color: transparent;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 1.45rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.15;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .brand-tagline {
+    display: block;
+    margin-top: 0.18rem;
+    color: #a97978;
+    font-size: 0.58rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  /* Warm Glassmorphic Panel Cards with Rose-Gold Bordering */
+  .glam-card {
+    background: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(201, 125, 96, 0.22);
+    border-radius: 2rem;
+    box-shadow: 
+      0 20px 40px -15px rgba(99, 67, 77, 0.08),
+      0 0 25px rgba(254, 215, 226, 0.4);
+  }
+
+  /* Crown Gradient Button: Deep Berry to Warm Rose Gold with Ambient Glow */
+  .glam-btn-primary {
+    background-image: linear-gradient(135deg, #be185d 0%, #db2777 40%, #c97d60 100%);
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 0.72rem 1.85rem;
+    border-radius: 9999px;
+    box-shadow: 0 6px 20px rgba(190, 24, 93, 0.28);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glam-btn-primary:hover {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 0 24px var(--color-radiant-glow), 0 8px 24px rgba(190, 24, 93, 0.32);
+  }
+
+  .glam-btn-primary:active {
+    transform: scale(0.97);
+  }
+
+  /* Champagne/Rose Secondary Button */
+  .glam-btn-secondary {
+    background: rgba(255, 248, 247, 0.85);
+    color: #9f1239;
+    border: 1px solid rgba(201, 125, 96, 0.4);
+    font-weight: 600;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    padding: 0.72rem 1.6rem;
+    border-radius: 9999px;
+    transition: all 0.25s ease;
+  }
+
+  .glam-btn-secondary:hover {
+    background: #9f1239;
+    color: #fff9f5;
+    border-color: transparent;
+    transform: translateY(-1px) scale(1.02);
+    box-shadow: 0 6px 18px rgba(159, 18, 57, 0.22);
+  }
+
+  /* Velvet-Touch Input Fields */
+  .glam-input {
+    width: 100%;
+    padding: 0.8rem 1.35rem;
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1.5px solid rgba(201, 125, 96, 0.28);
+    color: var(--color-warm-espresso);
+    font-size: 0.875rem;
+    transition: all 0.25s ease;
+  }
+
+  .glam-input::placeholder {
+    color: #a89498;
+  }
+
+  .glam-input:focus {
+    outline: none;
+    background: #ffffff;
+    border-color: #c97d60;
+    box-shadow: 0 0 0 4px rgba(201, 125, 96, 0.18);
+  }
+
+  /* Golden/Melanin Highlight Text Utility */
+  .text-glow-gold {
+    background: linear-gradient(135deg, #c97d60 0%, #db2777 50%, #d4a373 100%);
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* ─── WARM ROSE-GOLD SCROLLBAR ─── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(201, 125, 96, 0.35);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(201, 125, 96, 0.6);
+}
+
+/* ─── RADIANT PULSE & SHIMMER ANIMATION ─── */
+@keyframes softPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.animate-soft-pulse {
+  animation: softPulse 2.8s infinite ease-in-out;
 }

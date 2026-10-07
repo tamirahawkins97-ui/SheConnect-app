@@ -2,7 +2,7 @@ import { Link, NavLink } from 'react-router-dom';
 import Logo from '../../assets/Logo.jpg';
 
 const routes = [
-  { to: '/feed', label: 'Feed', end: true },
+  { to: '/feed', label: 'Home', end: true },
   { to: '/conversations', label: 'Social Hub', end: false },
   { to: '/create-post', label: 'Create Post', end: true },
   { to: '/profile', label: 'Profile', end: true },

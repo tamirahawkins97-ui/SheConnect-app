@@ -16,7 +16,8 @@ import type { User } from '../types';
 import { apiFetch } from '../utils/api';
 import CommentThread from '../components/feed/CommentThread';
 
-type FeedUser = Pick<User, '_id' | 'username' | 'role'>;
+type FeedUser = Pick<User, '_id' | 'username' | 'role' | 'avatar'>;
+type CommunityMember = FeedUser & { isActive: boolean };
 type FeedPost = {
   _id: string;
   userId: FeedUser | string;
@@ -155,7 +156,7 @@ export default function Feed() {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState<FeedUser | null>(null);
   const [posts, setPosts] = useState<FeedPost[]>([]);
-  const [activeUsers, setActiveUsers] = useState<FeedUser[]>([]);
+  const [activeUsers, setActiveUsers] = useState<CommunityMember[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [feedError, setFeedError] = useState('');
@@ -187,19 +188,36 @@ export default function Feed() {
         if (active) setLoadingPosts(false);
       });
 
-    apiFetch<FeedUser[]>('/api/users')
-      .then((items) => {
-        if (active) setActiveUsers(items);
-      })
-      .catch((error: unknown) => {
-        if (active) setUsersError(error instanceof Error ? error.message : 'Unable to find community members.');
-      })
-      .finally(() => {
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadCommunityMembers() {
+      try {
+        const members = await apiFetch<CommunityMember[]>('/api/users');
+        if (active) {
+          setActiveUsers(members);
+          setUsersError('');
+        }
+      } catch (error) {
+        if (active) {
+          setUsersError(error instanceof Error ? error.message : 'Unable to find community members.');
+        }
+      } finally {
         if (active) setLoadingUsers(false);
-      });
+      }
+    }
+
+    void loadCommunityMembers();
+    const intervalId = window.setInterval(() => void loadCommunityMembers(), 30_000);
 
     return () => {
       active = false;
+      window.clearInterval(intervalId);
     };
   }, []);
 
@@ -354,7 +372,15 @@ export default function Feed() {
                 )}
 
                 <div className="mb-4 flex items-center gap-3 pr-20">
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-rose-200 to-pink-100 font-serif font-semibold text-rose-700">{postAuthor(post).slice(0, 1).toUpperCase()}</span>
+                  {typeof post.userId === 'object' && post.userId.avatar ? (
+                    <img
+                      src={post.userId.avatar}
+                      alt=""
+                      className="size-10 shrink-0 rounded-full border border-rose-100 object-cover shadow-sm"
+                    />
+                  ) : (
+                    <span className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-rose-200 to-pink-100 font-serif font-semibold text-rose-700">{postAuthor(post).slice(0, 1).toUpperCase()}</span>
+                  )}
                   <div className="min-w-0">
                     <h2 className="truncate text-sm font-semibold text-zinc-800">{postAuthor(post)}</h2>
                     <p className="text-[11px] text-zinc-400">{formatDueDate(post.createdAt)}</p>
@@ -410,8 +436,8 @@ export default function Feed() {
 
         <aside className="col-span-12 rounded-3xl border border-rose-100/80 bg-white/75 p-5 shadow-[0_10px_30px_rgba(244,63,94,0.06)] backdrop-blur-xl md:col-span-6 lg:sticky lg:top-6 lg:col-span-3">
           <div className="mb-4 border-b border-rose-100 pb-3">
-            <h2 className="font-serif text-base font-bold text-zinc-800">Currently Active</h2>
-            <span className="text-[10px] text-zinc-400">Mamas in your community</span>
+            <h2 className="font-serif text-base font-bold text-zinc-800">Your Community</h2>
+            <span className="text-[10px] text-zinc-400">See who’s active right now</span>
           </div>
           <div className="space-y-2">
             {loadingUsers ? (
@@ -425,12 +451,20 @@ export default function Feed() {
             ) : activeUsers.map((user, index) => (
               <button className="group flex w-full items-center gap-3 rounded-2xl p-2 text-left transition hover:scale-[1.02] hover:bg-rose-50/70 active:scale-[.98]" key={user._id} type="button" onClick={() => navigate(`/conversations?userId=${encodeURIComponent(user._id)}`)} title={`Chat with ${user.username}`}>
                 <span className={`relative grid size-11 shrink-0 place-items-center rounded-full border border-rose-200 font-serif text-sm font-bold shadow-inner transition group-hover:scale-105 ${['bg-gradient-to-tr from-rose-200 to-pink-100 text-rose-700', 'bg-gradient-to-tr from-amber-100 to-rose-100 text-rose-700', 'bg-gradient-to-tr from-fuchsia-100 to-pink-100 text-fuchsia-700'][index % 3]}`}>
-                  {user.username.slice(0, 1).toUpperCase()}
-                  <span className="absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-white bg-emerald-400 shadow-sm"><span className="absolute inset-0 animate-ping rounded-full bg-emerald-400 opacity-50" /></span>
+                  {user.avatar ? <img src={user.avatar} alt="" className="size-full rounded-full object-cover" /> : user.username.slice(0, 1).toUpperCase()}
+                  <span
+                    className={`absolute -bottom-0.5 -right-0.5 size-3.5 rounded-full border-2 border-white shadow-sm ${
+                      user.isActive ? 'bg-emerald-400' : 'bg-zinc-300'
+                    }`}
+                    aria-label={user.isActive ? 'Active now' : 'Inactive'}
+                    title={user.isActive ? 'Active now' : 'Inactive'}
+                  >
+                    {user.isActive && <span className="absolute inset-0 animate-ping rounded-full bg-emerald-400 opacity-50" />}
+                  </span>
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-semibold text-zinc-700 transition group-hover:text-rose-600">{user.username}</span>
-                  <span className="text-[10px] text-zinc-400">{user.role === 'Veteran Mommy' ? 'Veteran mama' : 'Community member'}</span>
+                  <span className="text-[10px] text-zinc-400">{user.isActive ? 'Active now' : 'Inactive'} · {user.role === 'Veteran Mommy' ? 'Veteran mama' : 'Community member'}</span>
                 </span>
                 <MessageCircle size={15} className="text-rose-300 transition group-hover:scale-110 group-hover:text-rose-500" />
               </button>

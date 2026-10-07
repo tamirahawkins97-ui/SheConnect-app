@@ -1,6 +1,8 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Navbar from './components/layout/Navbar';
+import { apiFetch } from './utils/api';
 
 import Home from './pages/Landing';
 import Profile from './pages/Profile';
@@ -11,6 +13,35 @@ import Settings from './pages/Settings';
 import CreatePostCard from './components/feed/CreatePostCard';
 
 function AuthenticatedLayout() {
+  useEffect(() => {
+    let updating = false;
+
+    async function updatePresence() {
+      if (document.visibilityState !== 'visible' || updating) return;
+      updating = true;
+      try {
+        await apiFetch<{ message: string }>('/api/users/me/presence', { method: 'PATCH' });
+      } catch (error) {
+        console.error('Unable to update online presence:', error);
+      } finally {
+        updating = false;
+      }
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void updatePresence();
+    };
+
+    void updatePresence();
+    const intervalId = window.setInterval(() => void updatePresence(), 30_000);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   return (
     <>
       <Navbar />

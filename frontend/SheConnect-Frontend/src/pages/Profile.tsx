@@ -1,11 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { Check, Copy, Pencil, Trash2, X } from 'lucide-react';
 import Logo from '../assets/Logo.jpg'; // Your SheConnect logo asset
+import { apiFetch } from '../utils/api';
 
-// Default placeholder for your upcoming asset image
-const DEFAULT_SUPPORTING_IMAGE = 'https://images.unsplash.com/photo-1516627145497-ae6968895b74?auto=format&fit=crop&w=800&q=80';
+const DEFAULT_SUPPORTING_IMAGE = 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/African_baby.jpg/960px-African_baby.jpg';
 
 const API_BASE = 'http://localhost:1111/api/users';
+
+type ProfilePost = {
+  _id: string;
+  userId: { _id: string; username?: string } | string;
+  imageURL?: string;
+  message: string;
+  Day: number;
+  Week: number;
+  Trimester: string;
+  dueDate: string;
+  createdAt: string;
+};
+
+type PostDraft = Pick<ProfilePost, 'imageURL' | 'message' | 'Day' | 'Week' | 'Trimester' | 'dueDate'>;
 
 const PREGNANCY_STAGES = [
   { id: 1, label: 'Mo 1', detail: 'Weeks 1-4' },
@@ -21,6 +36,7 @@ const PREGNANCY_STAGES = [
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Form State
@@ -32,6 +48,18 @@ export default function ProfilePage() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [myPosts, setMyPosts] = useState<ProfilePost[]>([]);
+  const [postCreatedMessage, setPostCreatedMessage] = useState('');
+  const [postSearch, setPostSearch] = useState('');
+  const [copiedPostId, setCopiedPostId] = useState<string | null>(null);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [postsError, setPostsError] = useState('');
+  const [selectedPost, setSelectedPost] = useState<ProfilePost | null>(null);
+  const [postDraft, setPostDraft] = useState<PostDraft | null>(null);
+  const [postEditorLoading, setPostEditorLoading] = useState(false);
+  const [savingPost, setSavingPost] = useState(false);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  const [postEditorError, setPostEditorError] = useState('');
 
   const token = localStorage.getItem('authToken');
   const authHeaders = {
@@ -41,19 +69,169 @@ export default function ProfilePage() {
 
   // 1. Fetch current profile data if logged in
   useEffect(() => {
-    fetch(`${API_BASE}/me`, { headers: authHeaders })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) {
-          if (data.username) setUsername(data.username);
-          if (data.name && !data.username) setUsername(data.name);
-          if (data.email) setEmail(data.email);
-          if (data.avatar) setProfilePreview(data.avatar);
-          if (data.pregnancyMonth) setSelectedMonth(Number(data.pregnancyMonth));
+    let mounted = true;
+    const navigationPost = (location.state as { createdPost?: ProfilePost } | null)?.createdPost;
+    const storedPostId = sessionStorage.getItem('sheconnect:created-post-id');
+    const createdPost = navigationPost?._id ? navigationPost : null;
+
+    if (createdPost?._id) {
+      setMyPosts((posts) => [createdPost, ...posts.filter((post) => post._id !== createdPost._id)]);
+      setPostSearch('');
+      setPostsLoading(false);
+      setPostCreatedMessage('Your post was saved and is now in My Posts.');
+      navigate(location.pathname, { replace: true, state: null });
+    }
+
+    async function loadProfile() {
+      try {
+        const response = await apiFetch<{ user: {
+          username?: string;
+          name?: string;
+          email?: string;
+          avatar?: string;
+          pregnancyMonth?: number | string;
+        } }>('/api/users/me');
+        if (!mounted) return;
+
+        const user = response.user;
+        if (user.username || user.name) setUsername(user.username || user.name || '');
+        if (user.email) setEmail(user.email);
+        if (user.avatar) setProfilePreview(user.avatar);
+        if (user.pregnancyMonth) setSelectedMonth(Number(user.pregnancyMonth));
+      } catch (error) {
+        if (mounted) {
+          setStatusMessage(error instanceof Error ? error.message : 'Unable to load your profile.');
         }
-      })
-      .catch(() => {});
+      }
+    }
+
+    async function loadMyPosts() {
+      try {
+        const posts = await apiFetch<ProfilePost[]>('/api/posts/mine');
+        if (mounted) {
+          const createdPostId = createdPost?._id || storedPostId;
+          let refreshedPosts = posts;
+          if (createdPostId && !posts.some((post) => post._id === createdPostId)) {
+            const savedPost = createdPost?._id === createdPostId
+              ? createdPost
+              : await apiFetch<ProfilePost>(`/api/posts/${encodeURIComponent(createdPostId)}`);
+            refreshedPosts = [savedPost, ...posts.filter((post) => post._id !== createdPostId)];
+          }
+          setMyPosts(refreshedPosts);
+          if (storedPostId && refreshedPosts.some((post) => post._id === storedPostId)) {
+            sessionStorage.removeItem('sheconnect:created-post-id');
+          }
+        }
+      } catch (error) {
+        if (mounted) setPostsError(error instanceof Error ? error.message : 'Unable to load your posts.');
+      } finally {
+        if (mounted) setPostsLoading(false);
+      }
+    }
+
+    void loadProfile();
+    void loadMyPosts();
+    return () => { mounted = false; };
   }, []);
+
+  async function openPost(postId: string) {
+    setPostEditorLoading(true);
+    setPostEditorError('');
+    setSelectedPost(null);
+    setPostDraft(null);
+    try {
+      const post = await apiFetch<ProfilePost>(`/api/posts/${encodeURIComponent(postId)}`);
+      setMyPosts((posts) => posts.some((item) => item._id === post._id)
+        ? posts
+        : [post, ...posts]);
+      setSelectedPost(post);
+      setPostDraft({
+        imageURL: post.imageURL || '',
+        message: post.message,
+        Day: post.Day,
+        Week: post.Week,
+        Trimester: post.Trimester,
+        dueDate: post.dueDate,
+      });
+    } catch (error) {
+      setPostEditorError(error instanceof Error ? error.message : 'Unable to open this post.');
+    } finally {
+      setPostEditorLoading(false);
+    }
+  }
+
+  async function findPostById(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const postId = postSearch.trim();
+    if (!postId) {
+      setPostEditorError('Enter a post ID to search.');
+      return;
+    }
+    if (!/^[a-f\d]{24}$/i.test(postId)) {
+      setPostEditorError('Enter a valid 24-character post ID.');
+      return;
+    }
+    await openPost(postId);
+  }
+
+  async function copyPostId(postId: string) {
+    try {
+      await navigator.clipboard.writeText(postId);
+      setCopiedPostId(postId);
+      window.setTimeout(() => setCopiedPostId((current) => current === postId ? null : current), 1800);
+    } catch (error) {
+      setPostsError(error instanceof Error ? 'Unable to copy the post ID. You can select and copy it manually.' : 'Unable to copy the post ID.');
+    }
+  }
+
+  async function savePost(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!selectedPost || !postDraft) return;
+
+    setSavingPost(true);
+    setPostEditorError('');
+    try {
+      const updatedPost = await apiFetch<ProfilePost>(`/api/posts/${encodeURIComponent(selectedPost._id)}`, {
+        method: 'PUT',
+        body: postDraft,
+      });
+      setMyPosts((posts) => posts.map((post) => post._id === updatedPost._id ? updatedPost : post));
+      setSelectedPost(updatedPost);
+      setPostDraft({
+        imageURL: updatedPost.imageURL || '',
+        message: updatedPost.message,
+        Day: updatedPost.Day,
+        Week: updatedPost.Week,
+        Trimester: updatedPost.Trimester,
+        dueDate: updatedPost.dueDate,
+      });
+    } catch (error) {
+      setPostEditorError(error instanceof Error ? error.message : 'Unable to save your post.');
+    } finally {
+      setSavingPost(false);
+    }
+  }
+
+  async function deletePost(postId: string) {
+    if (!window.confirm('Delete this post? This cannot be undone.')) return;
+    setDeletingPostId(postId);
+    setPostsError('');
+    setPostEditorError('');
+    try {
+      await apiFetch<{ message: string }>(`/api/posts/${encodeURIComponent(postId)}`, { method: 'DELETE' });
+      setMyPosts((posts) => posts.filter((post) => post._id !== postId));
+      if (selectedPost?._id === postId) {
+        setSelectedPost(null);
+        setPostDraft(null);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to delete this post.';
+      if (selectedPost?._id === postId) setPostEditorError(message);
+      else setPostsError(message);
+    } finally {
+      setDeletingPostId(null);
+    }
+  }
 
   // 2. Handle Independent Local File Selection & Preview
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -105,7 +283,7 @@ export default function ProfilePage() {
 
       setStatusMessage('Profile polished ✨ Routing to feed...');
       setTimeout(() => {
-        navigate('/dashboard', { replace: true });
+        navigate('/feed', { replace: true });
       }, 1000);
     } catch (err: any) {
       console.error(err);
@@ -313,12 +491,20 @@ export default function ProfilePage() {
           {/* Supporting background image */}
           <img
             src={DEFAULT_SUPPORTING_IMAGE}
-            alt="Maternal Aesthetic"
+            alt="Brown-skinned baby resting in their mother's arms"
             className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
           />
 
           {/* Soft vignette overlay */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none" />
+          <a
+            href="https://commons.wikimedia.org/wiki/File:African_baby.jpg"
+            target="_blank"
+            rel="noreferrer"
+            className="absolute bottom-7 left-5 z-10 max-w-40 rounded-full bg-black/35 px-3 py-2 text-[10px] leading-4 text-white/90 backdrop-blur-sm transition hover:bg-black/55"
+          >
+            Photo: Queen Asali · CC BY-SA 4.0
+          </a>
 
           {/* Continue Button (Bottom Right) */}
           <div className="absolute bottom-6 right-6 z-10">
@@ -334,6 +520,259 @@ export default function ProfilePage() {
         </div>
 
       </main>
+
+      <section className="mx-auto w-full max-w-6xl px-8 pb-12" aria-labelledby="my-posts-heading">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-400">Your moments</p>
+            <h2 id="my-posts-heading" className="mt-1 font-serif text-3xl text-zinc-800">My Posts</h2>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/create-post')}
+            className="rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_4px_15px_rgba(244,63,94,0.25)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95"
+          >
+            Share a moment
+          </button>
+        </div>
+
+        {postsError && (
+          <p className="mb-4 rounded-2xl border border-rose-200 bg-white/80 px-4 py-3 text-sm text-rose-700" role="alert">
+            {postsError}
+          </p>
+        )}
+        {postCreatedMessage && (
+          <p className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-800" role="status">
+            {postCreatedMessage}
+          </p>
+        )}
+        {postEditorError && !selectedPost && (
+          <p className="mb-4 rounded-2xl border border-rose-200 bg-white/80 px-4 py-3 text-sm text-rose-700" role="alert">
+            {postEditorError}
+          </p>
+        )}
+
+        <form onSubmit={findPostById} className="mb-5 flex flex-col gap-3 rounded-3xl border border-rose-100/80 bg-white/75 p-4 shadow-[0_10px_30px_rgba(244,63,94,0.04)] sm:flex-row">
+          <label htmlFor="my-post-search" className="sr-only">Search your posts by post ID</label>
+          <input
+            id="my-post-search"
+            type="search"
+            value={postSearch}
+            onChange={(event) => {
+              setPostSearch(event.target.value);
+              setPostEditorError('');
+            }}
+            placeholder="Search or open a post by its ID"
+            className="min-w-0 flex-1 rounded-full border border-rose-100 bg-white px-5 py-3 text-sm text-zinc-700 outline-none transition placeholder:text-zinc-400 focus:ring-4 focus:ring-rose-100"
+          />
+          <button
+            type="submit"
+            disabled={postEditorLoading || !postSearch.trim()}
+            className="rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_4px_15px_rgba(244,63,94,0.25)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {postEditorLoading ? 'Searching...' : 'Find by ID'}
+          </button>
+        </form>
+
+        {postsLoading ? (
+          <p className="rounded-3xl border border-rose-100/80 bg-white/75 p-6 text-sm text-zinc-500" role="status">
+            Loading your posts...
+          </p>
+        ) : myPosts.length === 0 ? (
+          <div className="rounded-3xl border border-rose-100/80 bg-white/75 px-6 py-10 text-center shadow-[0_10px_30px_rgba(244,63,94,0.05)]">
+            <h3 className="font-serif text-xl text-zinc-800">Your story starts here</h3>
+            <p className="mt-2 text-sm text-zinc-500">Posts you create will appear here, ready for you to revisit, search, or edit.</p>
+          </div>
+        ) : (
+          myPosts.filter((post) => {
+            const query = postSearch.trim().toLowerCase();
+            return !query || post._id.toLowerCase().includes(query) || post.message.toLowerCase().includes(query);
+          }).length === 0 ? (
+            <p className="rounded-3xl border border-rose-100/80 bg-white/75 p-6 text-center text-sm text-zinc-500">
+              No posts match that search. Enter a post ID above to look it up directly.
+            </p>
+          ) : (
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {myPosts.filter((post) => {
+              const query = postSearch.trim().toLowerCase();
+              return !query || post._id.toLowerCase().includes(query) || post.message.toLowerCase().includes(query);
+            }).map((post) => (
+              <article key={post._id} className="overflow-hidden rounded-3xl border border-rose-100/80 bg-white/80 shadow-[0_10px_30px_rgba(244,63,94,0.06)]">
+                {post.imageURL ? (
+                  <img src={post.imageURL} alt="" className="h-48 w-full object-cover" />
+                ) : (
+                  <div className="grid h-36 place-items-center bg-gradient-to-br from-rose-50 to-pink-100 text-rose-300" aria-hidden="true">
+                    <span className="font-serif text-lg">A little moment ✦</span>
+                  </div>
+                )}
+                <div className="p-5">
+                  <p className="line-clamp-3 whitespace-pre-wrap text-sm leading-6 text-zinc-700">{post.message}</p>
+                  <p className="mt-3 text-xs text-rose-500">
+                    Day {post.Day} · Week {post.Week} · {post.Trimester}
+                  </p>
+                  <div className="mt-3 flex items-center gap-2 rounded-xl border border-rose-100 bg-rose-50/70 px-3 py-2">
+                    <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wider text-rose-500">Post ID</span>
+                    <code className="min-w-0 flex-1 break-all font-mono text-[11px] text-zinc-600" aria-label={`Post ID ${post._id}`}>
+                      {post._id}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => void copyPostId(post._id)}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-full border border-rose-200 bg-white px-2.5 py-1.5 text-[11px] font-medium text-rose-600 transition-all hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] active:scale-95"
+                      aria-label={`Copy post ID ${post._id}`}
+                      title="Copy post ID"
+                    >
+                      {copiedPostId === post._id ? <Check size={13} /> : <Copy size={13} />}
+                      {copiedPostId === post._id ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  <div className="mt-4 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => void openPost(post._id)}
+                      disabled={postEditorLoading}
+                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] active:scale-95 disabled:opacity-60"
+                    >
+                      <Pencil size={15} /> View / Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void deletePost(post._id)}
+                      disabled={deletingPostId === post._id}
+                      aria-label="Delete post"
+                      className="inline-flex items-center justify-center rounded-full border border-rose-200 bg-white px-3 text-rose-600 transition-all duration-300 hover:scale-105 hover:bg-rose-50 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] active:scale-95 disabled:opacity-60"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+          )
+        )}
+      </section>
+
+      {postEditorLoading && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-rose-950/20 p-4 backdrop-blur-sm" role="status">
+          <p className="rounded-2xl bg-white px-6 py-4 text-sm text-rose-700 shadow-xl">Opening your post...</p>
+        </div>
+      )}
+
+      {selectedPost && postDraft && (
+        <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-rose-950/30 p-4 backdrop-blur-sm">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="edit-post-heading"
+            className="my-8 w-full max-w-2xl rounded-3xl border border-rose-100 bg-[#fffafb] p-6 shadow-2xl sm:p-8"
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-400">Your story</p>
+                <h2 id="edit-post-heading" className="mt-1 font-serif text-2xl text-zinc-800">Edit your post</h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setSelectedPost(null); setPostDraft(null); setPostEditorError(''); }}
+                aria-label="Close editor"
+                className="rounded-full p-2 text-zinc-500 transition hover:bg-rose-50 hover:text-rose-600"
+              >
+                <X size={19} />
+              </button>
+            </div>
+
+            <form onSubmit={savePost} className="space-y-4">
+              {selectedPost.imageURL && (
+                <img src={selectedPost.imageURL} alt="Post" className="max-h-64 w-full rounded-2xl object-cover" />
+              )}
+              <label className="block text-sm font-medium text-zinc-600">
+                Image URL
+                <input
+                  type="url"
+                  value={postDraft.imageURL || ''}
+                  onChange={(event) => setPostDraft((draft) => draft ? { ...draft, imageURL: event.target.value } : draft)}
+                  placeholder="https://..."
+                  className="mt-1 w-full rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm outline-none transition focus:ring-4 focus:ring-rose-100"
+                />
+              </label>
+              <label className="block text-sm font-medium text-zinc-600">
+                Message
+                <textarea
+                  required
+                  rows={4}
+                  value={postDraft.message}
+                  onChange={(event) => setPostDraft((draft) => draft ? { ...draft, message: event.target.value } : draft)}
+                  className="mt-1 w-full resize-y rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm outline-none transition focus:ring-4 focus:ring-rose-100"
+                />
+              </label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-sm font-medium text-zinc-600">
+                  Day (1–7)
+                  <input
+                    type="number"
+                    min={1}
+                    max={7}
+                    required
+                    value={postDraft.Day}
+                    onChange={(event) => setPostDraft((draft) => draft ? { ...draft, Day: Number(event.target.value) } : draft)}
+                    className="mt-1 w-full rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-rose-100"
+                  />
+                </label>
+                <label className="text-sm font-medium text-zinc-600">
+                  Week
+                  <input
+                    type="number"
+                    min={1}
+                    max={42}
+                    required
+                    value={postDraft.Week}
+                    onChange={(event) => setPostDraft((draft) => draft ? { ...draft, Week: Number(event.target.value) } : draft)}
+                    className="mt-1 w-full rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-rose-100"
+                  />
+                </label>
+                <label className="text-sm font-medium text-zinc-600">
+                  Trimester
+                  <input
+                    required
+                    value={postDraft.Trimester}
+                    onChange={(event) => setPostDraft((draft) => draft ? { ...draft, Trimester: event.target.value } : draft)}
+                    className="mt-1 w-full rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-rose-100"
+                  />
+                </label>
+                <label className="text-sm font-medium text-zinc-600">
+                  Due date
+                  <input
+                    required
+                    value={postDraft.dueDate}
+                    onChange={(event) => setPostDraft((draft) => draft ? { ...draft, dueDate: event.target.value } : draft)}
+                    className="mt-1 w-full rounded-2xl border border-rose-100 bg-white px-4 py-3 text-sm outline-none focus:ring-4 focus:ring-rose-100"
+                  />
+                </label>
+              </div>
+
+              {postEditorError && <p className="text-sm text-rose-700" role="alert">{postEditorError}</p>}
+              <div className="flex flex-wrap justify-between gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => void deletePost(selectedPost._id)}
+                  disabled={deletingPostId === selectedPost._id}
+                  className="rounded-full border border-rose-200 px-5 py-2.5 text-sm font-medium text-rose-700 transition-all hover:scale-105 hover:bg-rose-50 active:scale-95 disabled:opacity-60"
+                >
+                  {deletingPostId === selectedPost._id ? 'Deleting...' : 'Delete post'}
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPost}
+                  className="rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-6 py-2.5 text-sm font-semibold text-white shadow-[0_4px_15px_rgba(244,63,94,0.25)] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95 disabled:opacity-60"
+                >
+                  {savingPost ? 'Saving...' : 'Save changes'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

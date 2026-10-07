@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { MessageCircle, Send } from 'lucide-react';
+import { MessageCircle, Send, Trash2 } from 'lucide-react';
 import { apiFetch } from '../../utils/api';
-import { isTokenValid } from '../../utils/auth';
+import { decodeToken, isTokenValid } from '../../utils/auth';
 
 type CommentAuthor = {
   _id: string;
@@ -41,9 +41,14 @@ export default function CommentThread({ postId }: CommentThreadProps) {
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [deleteError, setDeleteError] = useState('');
   const canComment = isTokenValid();
+  const tokenPayload = decodeToken();
+  const userIdClaim = tokenPayload?._id || tokenPayload?.id;
+  const currentUserId = typeof userIdClaim === 'string' ? userIdClaim : '';
 
   useEffect(() => {
     let active = true;
@@ -94,6 +99,24 @@ export default function CommentThread({ postId }: CommentThreadProps) {
     }
   }
 
+  async function handleDelete(commentId: string) {
+    if (deletingCommentId) return;
+
+    setDeletingCommentId(commentId);
+    setDeleteError('');
+    try {
+      await apiFetch<{ message: string }>(
+        `/api/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}`,
+        { method: 'DELETE' }
+      );
+      setComments((existing) => existing.filter((comment) => comment._id !== commentId));
+    } catch (deleteFailure) {
+      setDeleteError(deleteFailure instanceof Error ? deleteFailure.message : 'Unable to delete this comment.');
+    } finally {
+      setDeletingCommentId(null);
+    }
+  }
+
   return (
     <section className="mt-4 border-t border-rose-100 pt-4" aria-label="Post comments">
       <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-zinc-700">
@@ -126,9 +149,27 @@ export default function CommentThread({ postId }: CommentThreadProps) {
                 <div className="min-w-0 flex-1 rounded-2xl rounded-tl-sm border border-rose-100 bg-white px-3 py-2.5">
                   <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                     <span className="text-xs font-semibold text-zinc-700">{authorName}</span>
-                    <time className="text-[10px] text-zinc-400" dateTime={comment.createdAt}>
-                      {formatCommentTime(comment.createdAt)}
-                    </time>
+                    <span className="inline-flex items-center gap-2">
+                      <time className="text-[10px] text-zinc-400" dateTime={comment.createdAt}>
+                        {formatCommentTime(comment.createdAt)}
+                      </time>
+                      {canComment && currentUserId && (
+                        typeof comment.author === 'string'
+                          ? comment.author === currentUserId
+                          : comment.author._id === currentUserId
+                      ) && (
+                        <button
+                          className="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-medium text-zinc-400 transition hover:scale-105 hover:bg-rose-50 hover:text-rose-600 hover:shadow-[0_0_15px_rgba(244,63,94,0.25)] active:scale-95 disabled:cursor-wait disabled:opacity-50"
+                          type="button"
+                          onClick={() => void handleDelete(comment._id)}
+                          disabled={deletingCommentId !== null}
+                          aria-label={`Delete your comment by ${authorName}`}
+                        >
+                          <Trash2 size={12} aria-hidden="true" />
+                          {deletingCommentId === comment._id ? 'Deleting…' : 'Delete'}
+                        </button>
+                      )}
+                    </span>
                   </div>
                   {comment.text && (
                     <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-zinc-600">
@@ -175,6 +216,7 @@ export default function CommentThread({ postId }: CommentThreadProps) {
         <p className="mt-3 text-xs text-zinc-400">Sign in to join the conversation.</p>
       )}
       {submitError && <p className="mt-2 text-xs text-rose-700" role="alert">{submitError}</p>}
+      {deleteError && <p className="mt-2 text-xs text-rose-700" role="alert">{deleteError}</p>}
     </section>
   );
 }

@@ -9,6 +9,14 @@ const maxImageSize = 7 * 1024 * 1024;
 
 type CreatePostResponse = {
   _id: string;
+  userId: { _id: string; username?: string } | string;
+  imageURL?: string;
+  message: string;
+  Day: number;
+  Week: number;
+  Trimester: string;
+  dueDate: string;
+  createdAt: string;
 };
 
 function readImage(file: File): Promise<string> {
@@ -80,7 +88,7 @@ export default function CreatePostCard() {
 
     setSubmitting(true);
     try {
-      await apiFetch<CreatePostResponse>('/api/posts', {
+      const createdPost = await apiFetch<CreatePostResponse>('/api/posts', {
         method: 'POST',
         body: {
           image,
@@ -91,7 +99,12 @@ export default function CreatePostCard() {
           message: message.trim(),
         },
       });
-      navigate('/profile');
+      try {
+        sessionStorage.setItem('sheconnect:created-post-id', createdPost._id);
+      } catch (storageError) {
+        console.warn('Unable to persist the created post ID for Profile recovery:', storageError);
+      }
+      navigate('/profile', { state: { createdPost } });
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : 'Unable to save your post. Please try again.');
     } finally {

@@ -9,6 +9,7 @@ export interface User {
     _id: string;
     username: string;
     email:string;
+    avatar?: string;
     role: UserRole;
     createdAt?:string;
     updatedAt?: string;
