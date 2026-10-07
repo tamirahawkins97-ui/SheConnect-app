@@ -9,7 +9,7 @@ const adminOnly = require('../middleware/AdminOnly');
 router.get("/", verifyAuthentication, authController.getUsers);
 router.get("/me", verifyAuthentication, authController.getUser);
 router.patch("/me/presence", verifyAuthentication, authController.updatePresence);
-router.get("/admin", verifyAuthentication, adminOnly, authController.getUser);
+router.get("/admin", verifyAuthentication, adminOnly, authController.verifyVeteranAccess);
 router.post("/register", authController.registerUser);
 router.post("/login", authController.loginUser);
 

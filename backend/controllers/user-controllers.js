@@ -62,11 +62,19 @@ async function getUser(req, res) {
   }
 }
 
+function verifyVeteranAccess(req, res) {
+  return res.status(200).json({ message: "Veteran Mommy access verified." });
+}
+
 async function registerUser(req, res) {
   try {
     const foundUser = await User.findOne({ email: req.body.email });
     if (foundUser !== null) return res.status(400).json({ message: "This user already exists." });
-    const newUser = await User.create(req.body);
+    const newUser = await User.create({
+      username: req.body.username,
+      email: req.body.email,
+      password: req.body.password,
+    });
 
     const payload = { _id: newUser._id, role: newUser.role };
 
@@ -95,7 +103,7 @@ async function loginUser(req, res) {
 
     const payload = { _id: user._id, role: user.role };
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
 
     res.status(200).json({ message: "User logged in successfully!", token });
   } catch(error) {
@@ -108,6 +116,7 @@ module.exports = {
   getUsers,
   updatePresence,
   getUser,
+  verifyVeteranAccess,
   registerUser,
   loginUser
 };
