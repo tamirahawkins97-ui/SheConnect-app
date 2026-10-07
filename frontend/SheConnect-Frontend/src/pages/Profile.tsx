@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Check, Copy, Pencil, Trash2, X } from 'lucide-react';
-import Logo from '../assets/Logo.jpg'; // Your SheConnect logo asset
+import Brand from '../components/layout/Brand';
 import { apiFetch } from '../utils/api';
 
 const DEFAULT_SUPPORTING_IMAGE = 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/African_baby.jpg/960px-African_baby.jpg';
@@ -300,17 +300,7 @@ export default function ProfilePage() {
       <header className="profile-header relative w-full border-b border-rose-200/60 bg-white/70 backdrop-blur-xl px-8 py-3.5 flex items-center justify-between shadow-sm z-30">
         <div className="w-10"></div>
 
-        {/* Center Logo */}
-        <div className="flex items-center gap-2">
-          <img
-            src={Logo}
-            alt="SheConnect Logo"
-            className="w-10 h-10 rounded-full object-cover shadow-sm border border-rose-100"
-          />
-          <span className="text-2xl font-serif font-bold tracking-wider bg-gradient-to-r from-rose-500 via-pink-400 to-rose-600 bg-clip-text text-transparent">
-            SheConnect
-          </span>
-        </div>
+        <Brand to="/feed" className="profile-brand" />
 
         {/* Settings Icon */}
         <button

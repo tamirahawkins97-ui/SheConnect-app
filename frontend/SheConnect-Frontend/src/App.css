@@ -518,17 +518,23 @@ a {
     padding-inline: 1rem;
   }
 
-  .profile-header > div:nth-child(2) {
-    gap: 0.4rem;
+  .profile-header .profile-brand {
+    gap: 0.45rem;
   }
 
-  .profile-header > div:nth-child(2) img {
+  .profile-header .profile-brand .brand-mark {
     width: 2.5rem;
     height: 2.5rem;
+    flex-basis: 2.5rem;
   }
 
-  .profile-header > div:nth-child(2) span {
+  .profile-header .profile-brand .brand-wordmark {
     font-size: 1.2rem;
+  }
+
+  .profile-header .profile-brand .brand-tagline {
+    font-size: 0.45rem;
+    letter-spacing: 0.1em;
   }
 
   .profile-stages-section {
