@@ -6,7 +6,7 @@ const getAuthUserId = (req) => req.user?._id || req.user?.id;
 async function getUserPosts(req, res) {
   try {
     const posts = await Post.find({})
-      .populate('userId', 'username')
+      .populate('userId', 'username avatar')
       .sort({ createdAt: -1 })
       .limit(100);
 
@@ -17,15 +17,38 @@ async function getUserPosts(req, res) {
   }
 }
 
+async function getMyPosts(req, res) {
+  try {
+    const userId = getAuthUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication is required.' });
+    }
+
+    const posts = await Post.find({ userId })
+      .populate('userId', 'username avatar')
+      .sort({ createdAt: -1 })
+      .limit(100);
+
+    return res.status(200).json(posts);
+  } catch (error) {
+    console.error('Unable to fetch your posts:', error);
+    return res.status(500).json({ message: 'Unable to fetch your posts.' });
+  }
+}
+
 async function getSinglePost(req, res) {
   try {
+    const userId = getAuthUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication is required.' });
+    }
     if (!mongoose.isValidObjectId(req.params.id)) {
       return res.status(400).json({ message: 'Invalid post id.' });
     }
 
-    const post = await Post.findById(req.params.id).populate('userId', 'username');
+    const post = await Post.findOne({ _id: req.params.id, userId }).populate('userId', 'username avatar');
     if (!post) {
-      return res.status(404).json({ message: 'Post not found.' });
+      return res.status(404).json({ message: 'Post not found in your profile.' });
     }
 
     return res.status(200).json(post);
@@ -60,7 +83,7 @@ async function updatePost(req, res) {
       { _id: req.params.id, userId },
       { $set: updates },
       { new: true, runValidators: true }
-    ).populate('userId', 'username');
+    ).populate('userId', 'username avatar');
 
     if (!updatedPost) {
       return res.status(404).json({ message: 'Post not found or you do not own it.' });
@@ -150,7 +173,7 @@ async function createUserPost(req, res) {
       dueDate: req.body.dueDate,
     });
 
-    await post.populate('userId', 'username');
+    await post.populate('userId', 'username avatar');
     return res.status(201).json(post);
   } catch (error) {
     console.error('Error creating post:', error);
@@ -164,4 +187,5 @@ module.exports = {
   updatePost,
   getSinglePost,
   getUserPosts,
+  getMyPosts,
 };

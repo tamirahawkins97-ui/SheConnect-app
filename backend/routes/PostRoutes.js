@@ -6,7 +6,8 @@ const {
     deleteUserPost,
     updatePost, 
     getSinglePost,
-    getUserPosts
+    getUserPosts,
+    getMyPosts
 } = require('../controllers/post-controllers');
 
 const { verifyToken } = require('../middleware/auth-middleware');
@@ -15,6 +16,7 @@ const { verifyToken } = require('../middleware/auth-middleware');
 router.use(verifyToken);
 
 router.get('/', getUserPosts);
+router.get('/mine', getMyPosts);
 router.post('/', createUserPost);
 router.get('/:id', getSinglePost);
 router.delete('/:id', deleteUserPost);

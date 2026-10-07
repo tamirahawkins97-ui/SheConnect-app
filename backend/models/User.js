@@ -26,7 +26,15 @@ const userSchema = new mongoose.Schema({
         type: String,
         enum: ['user', 'Veteran Mommy'], 
           default: 'user'
-    }
+    },
+    avatar: {
+        type: String,
+        trim: true
+    },
+    lastSeenAt: {
+        type: Date,
+        default: null
+    },
 });
 
 userSchema.pre('save', async function() {

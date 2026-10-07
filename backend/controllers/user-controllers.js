@@ -4,15 +4,50 @@ const jwt = require("jsonwebtoken");
 
 async function getUsers(req, res) {
   try {
+    const now = Date.now();
+    const activeWindowMs = 90 * 1000;
     const users = await User.find({ _id: { $ne: req.user._id } })
-      .select("username role")
+      .select("username role lastSeenAt avatar")
       .sort({ username: 1 })
       .limit(100);
 
-    res.status(200).json(users);
+    res.status(200).json(users.map((user) => {
+      const lastSeenAt = user.lastSeenAt?.getTime();
+      return {
+        _id: user._id,
+        username: user.username,
+        role: user.role,
+        avatar: user.avatar,
+        isActive: typeof lastSeenAt === 'number' &&
+          lastSeenAt <= now &&
+          now - lastSeenAt <= activeWindowMs,
+      };
+    }));
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Unable to fetch community members." });
+  }
+}
+
+async function updatePresence(req, res) {
+  try {
+    const currentUserId = req.user?._id || req.user?.id;
+    if (!currentUserId) {
+      return res.status(401).json({ message: "User must register or log in." });
+    }
+
+    const result = await User.updateOne(
+      { _id: currentUserId },
+      { $set: { lastSeenAt: new Date() } }
+    );
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    return res.status(200).json({ message: "Presence updated." });
+  } catch (error) {
+    console.error("Unable to update user presence:", error);
+    return res.status(500).json({ message: "Unable to update user presence." });
   }
 }
 
@@ -71,6 +106,7 @@ async function loginUser(req, res) {
 
 module.exports = {
   getUsers,
+  updatePresence,
   getUser,
   registerUser,
   loginUser
