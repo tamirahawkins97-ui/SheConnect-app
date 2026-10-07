@@ -1,14 +1,7 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-
-export type Theme = 'light' | 'dark';
-
-interface ThemeContextValue {
-  theme: Theme;
-  setTheme: (theme: Theme) => void;
-}
+import { useEffect, useState, type ReactNode } from 'react';
+import { ThemeContext, type Theme } from './theme';
 
 const THEME_STORAGE_KEY = 'sheconnect:theme';
-const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function getSavedTheme(): Theme {
   try {
@@ -40,10 +33,4 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       {children}
     </ThemeContext.Provider>
   );
-}
-
-export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) throw new Error('useTheme must be used within a ThemeProvider.');
-  return context;
 }

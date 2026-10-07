@@ -12,7 +12,7 @@ import Auth from './pages/Auth';
 import Settings from './pages/Settings';
 import CreatePostCard from './components/feed/CreatePostCard';
 import { isTokenValid } from './utils/auth';
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from './contexts/ThemeProvider';
 
 function LandingRoute() {
   return isTokenValid() ? <Navigate to="/feed" replace /> : <Home />;
