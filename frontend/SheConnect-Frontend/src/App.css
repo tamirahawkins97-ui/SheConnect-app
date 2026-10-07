@@ -384,3 +384,51 @@ h1, h2, h3, .font-glam {
   background: rgba(55, 37, 48, 0.82) !important;
   border-color: rgba(204, 133, 158, 0.25) !important;
 }
+
+:root[data-theme='dark'] .chat-message-list {
+  background: linear-gradient(180deg, rgba(34, 26, 34, 0.45), rgba(27, 22, 28, 0.18));
+}
+
+:root[data-theme='dark'] .chat-message-sent {
+  background-image: linear-gradient(135deg, #8a3a59, #77354f 58%, #65394f) !important;
+  color: #fff2f6 !important;
+  box-shadow: 0 8px 22px rgba(8, 4, 9, 0.28), 0 0 18px rgba(196, 91, 133, 0.12);
+}
+
+:root[data-theme='dark'] .chat-message-received {
+  background: linear-gradient(145deg, #342832, #2c232c) !important;
+  border-color: rgba(204, 133, 158, 0.3) !important;
+  color: #f1e5ec !important;
+  box-shadow: 0 7px 18px rgba(8, 4, 9, 0.2);
+}
+
+:root[data-theme='dark'] .chat-composer {
+  background: rgba(35, 27, 35, 0.96) !important;
+  border-color: rgba(204, 133, 158, 0.24) !important;
+}
+
+:root[data-theme='dark'] .chat-composer-form {
+  background: rgba(54, 39, 51, 0.9) !important;
+  border-color: rgba(204, 133, 158, 0.3) !important;
+  box-shadow: inset 0 1px 4px rgba(7, 4, 8, 0.3);
+}
+
+:root[data-theme='dark'] .chat-composer-form:focus-within {
+  background: rgba(63, 43, 57, 0.98) !important;
+  border-color: rgba(221, 155, 179, 0.58) !important;
+}
+
+.chat-message-time-sent {
+  font-weight: 600;
+  color: #9f1239;
+}
+
+:root[data-theme='dark'] .chat-message-status {
+  color: #c5b4be;
+}
+
+:root[data-theme='dark'] .chat-message-time-sent {
+  color: #f1c982;
+  font-weight: 700;
+  text-shadow: 0 1px 8px rgba(241, 201, 130, 0.2);
+}

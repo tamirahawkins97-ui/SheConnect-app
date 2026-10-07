@@ -62,6 +62,18 @@ function formatTime(value?: string): string {
   return new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(date);
 }
 
+function formatMessageTime(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Time unavailable';
+
+  const time = new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(date);
+  const today = new Date();
+  if (date.toDateString() === today.toDateString()) return time;
+
+  const day = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }).format(date);
+  return `${day} · ${time}`;
+}
+
 function initials(name?: string | null): string {
   const parts = name?.trim().split(/\s+/).filter(Boolean) || [];
   return parts.slice(0, 2).map((part) => part[0].toUpperCase()).join('') || '♡';
@@ -531,7 +543,7 @@ function SocialHub() {
                   </button>
                 </header>
 
-                <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-7">
+                <div className="chat-message-list flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-7">
                   <div className="flex justify-center">
                     <span className="rounded-full border border-rose-100/80 bg-white/80 px-3 py-1 text-[10px] font-medium tracking-wide text-zinc-400">A SAFE SPACE TO BE YOU</span>
                   </div>
@@ -567,15 +579,17 @@ function SocialHub() {
                         {!isMine && <span className="mb-1 grid size-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-orange-100 to-rose-100 text-[9px] font-semibold text-rose-600">{initials(senderName)}</span>}
                         <div className={`max-w-[82%] sm:max-w-[72%] ${isMine ? 'items-end' : 'items-start'} flex flex-col`}>
                           <p className={`mb-1 px-1 text-[10px] text-zinc-400 ${isMine ? 'text-right' : ''}`}>{isMine ? 'You' : senderName}</p>
-                          <div className={`rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm ${
+                          <div className={`chat-message-bubble rounded-2xl px-4 py-3 text-sm leading-6 shadow-sm ${
                             isMine
-                              ? 'rounded-br-none bg-gradient-to-br from-rose-400 to-pink-500 text-white'
-                              : 'rounded-bl-none border border-rose-100 bg-white text-zinc-700'
+                              ? 'chat-message-sent rounded-br-none bg-gradient-to-br from-rose-400 to-pink-500 text-white'
+                              : 'chat-message-received rounded-bl-none border border-rose-100 bg-white text-zinc-700'
                           } ${message.pending ? 'opacity-70' : ''}`}>
                             {message.text}
                           </div>
-                          <div className={`mt-1 flex items-center gap-1 px-1 text-[10px] text-zinc-400 ${isMine ? 'justify-end' : ''}`}>
-                            <span>{formatTime(message.createdAt)}</span>
+                          <div className={`chat-message-status mt-1 flex items-center gap-1 px-1 text-[10px] text-zinc-400 ${isMine ? 'justify-end' : ''}`}>
+                            <time dateTime={message.createdAt} className={isMine ? 'chat-message-time-sent' : ''}>
+                              {isMine ? `Sent ${formatMessageTime(message.createdAt)}` : formatMessageTime(message.createdAt)}
+                            </time>
                             {isMine && (message.read ? <CheckCheck size={12} className="text-rose-400" /> : <Check size={12} />)}
                             {message.pending && <span>Sending…</span>}
                           </div>
@@ -586,9 +600,9 @@ function SocialHub() {
                   <div ref={messageEndRef} />
                 </div>
 
-                <div className="sticky bottom-0 border-t border-rose-100/80 bg-white/90 px-3 pb-3 pt-3 backdrop-blur-lg sm:px-5">
+                <div className="chat-composer sticky bottom-0 border-t border-rose-100/80 bg-white/90 px-3 pb-3 pt-3 backdrop-blur-lg sm:px-5">
                   {messageError && visibleMessages.length > 0 && <p className="mb-2 px-2 text-xs text-rose-600" role="alert">{messageError}</p>}
-                  <form className="flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50/50 p-1.5 pl-4 shadow-inner transition focus-within:border-rose-200 focus-within:bg-white focus-within:ring-4 focus-within:ring-rose-100/60" onSubmit={handleSend}>
+                  <form className="chat-composer-form flex items-center gap-2 rounded-full border border-rose-100 bg-rose-50/50 p-1.5 pl-4 shadow-inner transition focus-within:border-rose-200 focus-within:bg-white focus-within:ring-4 focus-within:ring-rose-100/60" onSubmit={handleSend}>
                     <button className="grid size-8 shrink-0 place-items-center rounded-full text-rose-300 transition hover:scale-110 hover:bg-rose-100 hover:text-rose-500" type="button" aria-label="Add a reaction">
                       <Smile size={19} />
                     </button>
