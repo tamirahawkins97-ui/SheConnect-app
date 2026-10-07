@@ -6,8 +6,6 @@ import { apiFetch } from '../utils/api';
 
 const DEFAULT_SUPPORTING_IMAGE = 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4f/African_baby.jpg/960px-African_baby.jpg';
 
-const API_BASE = 'http://localhost:1111/api/users';
-
 type ProfilePost = {
   _id: string;
   userId: { _id: string; username?: string } | string;
@@ -38,21 +36,26 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const location = useLocation();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const navigationPost = (location.state as { createdPost?: ProfilePost } | null)?.createdPost;
+  const navigationPostId = navigationPost?._id;
 
   // Form State
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(5); // default Month 5
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [myPosts, setMyPosts] = useState<ProfilePost[]>([]);
-  const [postCreatedMessage, setPostCreatedMessage] = useState('');
+  const [myPosts, setMyPosts] = useState<ProfilePost[]>(() => navigationPost ? [navigationPost] : []);
+  const [postCreatedMessage] = useState(
+    () => navigationPost ? 'Your post was saved and is now in My Posts.' : ''
+  );
   const [postSearch, setPostSearch] = useState('');
   const [copiedPostId, setCopiedPostId] = useState<string | null>(null);
-  const [postsLoading, setPostsLoading] = useState(true);
+  const [postsLoading, setPostsLoading] = useState(!navigationPost);
   const [postsError, setPostsError] = useState('');
   const [selectedPost, setSelectedPost] = useState<ProfilePost | null>(null);
   const [postDraft, setPostDraft] = useState<PostDraft | null>(null);
@@ -67,20 +70,16 @@ export default function ProfilePage() {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
+  useEffect(() => {
+    if (navigationPostId) {
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.pathname, location.state, navigate, navigationPostId]);
+
   // 1. Fetch current profile data if logged in
   useEffect(() => {
     let mounted = true;
-    const navigationPost = (location.state as { createdPost?: ProfilePost } | null)?.createdPost;
     const storedPostId = sessionStorage.getItem('sheconnect:created-post-id');
-    const createdPost = navigationPost?._id ? navigationPost : null;
-
-    if (createdPost?._id) {
-      setMyPosts((posts) => [createdPost, ...posts.filter((post) => post._id !== createdPost._id)]);
-      setPostSearch('');
-      setPostsLoading(false);
-      setPostCreatedMessage('Your post was saved and is now in My Posts.');
-      navigate(location.pathname, { replace: true, state: null });
-    }
 
     async function loadProfile() {
       try {
@@ -109,12 +108,10 @@ export default function ProfilePage() {
       try {
         const posts = await apiFetch<ProfilePost[]>('/api/posts/mine');
         if (mounted) {
-          const createdPostId = createdPost?._id || storedPostId;
+          const createdPostId = navigationPostId || storedPostId;
           let refreshedPosts = posts;
           if (createdPostId && !posts.some((post) => post._id === createdPostId)) {
-            const savedPost = createdPost?._id === createdPostId
-              ? createdPost
-              : await apiFetch<ProfilePost>(`/api/posts/${encodeURIComponent(createdPostId)}`);
+            const savedPost = await apiFetch<ProfilePost>(`/api/posts/${encodeURIComponent(createdPostId)}`);
             refreshedPosts = [savedPost, ...posts.filter((post) => post._id !== createdPostId)];
           }
           setMyPosts(refreshedPosts);
@@ -132,7 +129,7 @@ export default function ProfilePage() {
     void loadProfile();
     void loadMyPosts();
     return () => { mounted = false; };
-  }, []);
+  }, [navigationPostId]);
 
   async function openPost(postId: string) {
     setPostEditorLoading(true);
@@ -267,27 +264,25 @@ export default function ProfilePage() {
         avatarPayload = await fileToBase64(selectedFile);
       }
 
-      const res = await fetch(`${API_BASE}/profile`, {
+      await apiFetch<{ message: string }>('/api/users/profile', {
         method: 'PUT',
         headers: authHeaders,
-        body: JSON.stringify({
+        body: {
           username,
           email,
-          ...(password ? { password } : {}),
+          ...(password ? { password, currentPassword } : {}),
           avatar: avatarPayload,
           pregnancyMonth: selectedMonth,
-        }),
+        },
       });
-
-      if (!res.ok) throw new Error('Failed to update profile');
 
       setStatusMessage('Profile polished ✨ Routing to feed...');
       setTimeout(() => {
         navigate('/feed', { replace: true });
       }, 1000);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      setStatusMessage(err.message || 'Error saving changes');
+      setStatusMessage(err instanceof Error ? err.message : 'Error saving changes');
     } finally {
       setSaving(false);
     }
@@ -459,12 +454,25 @@ export default function ProfilePage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-500 mb-1 ml-2">Password</label>
+            <label className="block text-xs font-medium text-zinc-500 mb-1 ml-2">Current Password</label>
+            <input
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Required only to change password"
+              autoComplete="current-password"
+              className="w-full px-5 py-3 rounded-2xl bg-rose-50/40 border border-rose-100 text-sm text-zinc-700 placeholder-zinc-300 focus:outline-none focus:bg-white focus:ring-4 focus:ring-rose-100/60 transition-all"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-zinc-500 mb-1 ml-2">New Password (optional)</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Update password (optional)"
+              placeholder="At least 7 characters"
+              autoComplete="new-password"
               className="w-full px-5 py-3 rounded-2xl bg-rose-50/40 border border-rose-100 text-sm text-zinc-700 placeholder-zinc-300 focus:outline-none focus:bg-white focus:ring-4 focus:ring-rose-100/60 transition-all"
             />
           </div>

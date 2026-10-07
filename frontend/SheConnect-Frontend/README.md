@@ -58,9 +58,9 @@ React Router provides the browser-facing routes. These page paths are distinct f
 | `/feed` | Authenticated | Verifies the session with `GET /api/users/me`; loads posts with `GET /api/posts` and community members with `GET /api/users`. Post comments use `/api/posts/:postId/comments`. |
 | `/create-post` | Authenticated | Creates posts with `POST /api/posts`. |
 | `/social` and `/conversations` | Authenticated | Uses `/api/conversations` for conversation lists and creation, `/api/conversations/:id/messages` for reading and sending messages, and the conversation read-status `PATCH` endpoints. |
-| `/profile` | Authenticated | Loads the account with `GET /api/users/me` and personal posts with `GET /api/posts/mine`; post lookup, editing, and deletion use `/api/posts/:id`. |
-| `/settings` | Authenticated | Loads account settings with `GET /api/users/me`; currently attempts profile updates with `PUT /api/users/profile` and account deletion with `DELETE /api/users/me`. |
+| `/profile` | Authenticated | Loads the account with `GET /api/users/me` and personal posts with `GET /api/posts/mine`; profile changes use `PUT /api/users/profile`, and post lookup, editing, and deletion use `/api/posts/:id`. |
+| `/settings` | Authenticated | Loads account settings with `GET /api/users/me`, saves preferences with `PUT /api/users/profile`, and deletes the account with `DELETE /api/users/me`. |
 
 All authenticated pages are nested under `ProtectedRoute`, which checks token expiry in the browser and validates the session with `GET /api/users/me`. The authenticated layout also sends `PATCH /api/users/me/presence` when the page becomes visible and periodically while it remains open.
 
-**Backend route gap:** the current Express `UserRoutes.js` does not register `PUT /api/users/profile` or `DELETE /api/users/me`, although the Profile and Settings screens call these endpoints. Those save and account-deletion actions require matching backend routes/controllers before they can work end to end. See the [backend README](../../backend/README.md) for the implemented API contract.
+Profile and Settings mutations are authenticated and handled by the backend. Profile updates are allowlisted, validate settings, and require the current password before changing a password. Account deletion removes the user's posts, related comments, direct conversations, and membership/messages from group conversations. See the [backend README](../../backend/README.md) for the API contract.

@@ -203,14 +203,12 @@ function SocialHub() {
     return () => {
       active = false;
     };
-  }, [activeId]);
+  }, [activeId, currentUserId]);
 
   useEffect(() => {
     if (!newMessageOpen) return;
 
     let active = true;
-    setLoadingPeople(true);
-    setPeopleError('');
     apiFetch<ChatPerson[]>('/api/users')
       .then((items) => {
         if (active) setCommunityUsers(items);
@@ -406,6 +404,8 @@ function SocialHub() {
                   type="button"
                   onClick={() => {
                     setCreateConversationError('');
+                    setLoadingPeople(true);
+                    setPeopleError('');
                     setNewMessageOpen(true);
                   }}
                 >

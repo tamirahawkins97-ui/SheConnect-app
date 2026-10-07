@@ -2,8 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Logo from '../assets/Logo.jpg';
 import AppearanceControl from '../components/layout/AppearanceControl';
+import { apiFetch } from '../utils/api';
 
-const API_BASE = 'http://localhost:1111/api/users';
+type SettingsUser = {
+  email?: string;
+  momStatus?: string;
+  showActiveStatus?: boolean;
+  allowDirectMessages?: boolean;
+};
 
 export default function SettingsPage() {
   const navigate = useNavigate();
@@ -16,6 +22,7 @@ export default function SettingsPage() {
   const [allowDirectMessages, setAllowDirectMessages] = useState(true);
   const [pregnancyStage, setPregnancyStage] = useState('2nd Trimester');
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
@@ -27,17 +34,21 @@ export default function SettingsPage() {
 
   // 1. Fetch current settings on mount
   useEffect(() => {
-    fetch(`${API_BASE}/me`, { headers: authHeaders })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (data) {
-          if (data.email) setEmail(data.email);
-          if (data.momStatus) setPregnancyStage(data.momStatus);
-          if (typeof data.showActiveStatus === 'boolean') setShowActiveStatus(data.showActiveStatus);
-          if (typeof data.allowDirectMessages === 'boolean') setAllowDirectMessages(data.allowDirectMessages);
-        }
+    let active = true;
+    apiFetch<{ user: SettingsUser }>('/api/users/me')
+      .then(({ user }) => {
+        if (!active) return;
+        if (user.email) setEmail(user.email);
+        if (user.momStatus) setPregnancyStage(user.momStatus);
+        if (typeof user.showActiveStatus === 'boolean') setShowActiveStatus(user.showActiveStatus);
+        if (typeof user.allowDirectMessages === 'boolean') setAllowDirectMessages(user.allowDirectMessages);
       })
-      .catch(() => {});
+      .catch((error: unknown) => {
+        if (active) {
+          setErrorMsg(error instanceof Error ? error.message : 'Unable to load your settings.');
+        }
+      });
+    return () => { active = false; };
   }, []);
 
   // 2. Save Settings Handler
@@ -48,26 +59,23 @@ export default function SettingsPage() {
     setErrorMsg(null);
 
     try {
-      const res = await fetch(`${API_BASE}/profile`, {
+      await apiFetch<{ message: string }>('/api/users/profile', {
         method: 'PUT',
         headers: authHeaders,
-        body: JSON.stringify({
+        body: {
           email,
-          ...(newPassword ? { password: newPassword } : {}),
+          ...(newPassword ? { password: newPassword, currentPassword } : {}),
           momStatus: pregnancyStage,
           showActiveStatus,
           allowDirectMessages,
-        }),
+        },
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Could not update settings');
 
       setSuccessMsg('Settings updated successfully ✨');
       setNewPassword('');
       setCurrentPassword('');
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error saving changes');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Error saving changes');
     } finally {
       setLoading(false);
     }
@@ -87,16 +95,19 @@ export default function SettingsPage() {
     );
     if (!confirmed) return;
 
+    setDeleting(true);
+    setErrorMsg(null);
     try {
-      const res = await fetch(`${API_BASE}/me`, {
+      await apiFetch<{ message: string }>('/api/users/me', {
         method: 'DELETE',
         headers: authHeaders,
       });
 
-      if (!res.ok) throw new Error('Failed to delete account');
       handleLogout();
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Could not delete account');
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : 'Could not delete account');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -276,9 +287,10 @@ export default function SettingsPage() {
             </button>
             <button
               onClick={handleDeleteAccount}
+              disabled={deleting}
               className="px-5 py-2.5 rounded-full text-xs font-semibold tracking-wide text-red-600 bg-red-50 border border-red-200 hover:bg-red-500 hover:text-white transition-all hover:scale-105 active:scale-95"
             >
-              Delete Account
+              {deleting ? 'Deleting...' : 'Delete Account'}
             </button>
           </div>
         </div>

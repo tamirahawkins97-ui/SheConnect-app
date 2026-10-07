@@ -38,13 +38,14 @@ function formatCommentTime(value: string): string {
 
 export default function CommentThread({ postId }: CommentThreadProps) {
   const [comments, setComments] = useState<PostComment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loadedPostId, setLoadedPostId] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState('');
   const [submitError, setSubmitError] = useState('');
   const [deleteError, setDeleteError] = useState('');
+  const loading = loadedPostId !== postId;
   const canComment = isTokenValid();
   const tokenPayload = decodeToken();
   const userIdClaim = tokenPayload?._id || tokenPayload?.id;
@@ -52,24 +53,23 @@ export default function CommentThread({ postId }: CommentThreadProps) {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setLoadError('');
-    setComments([]);
 
     apiFetch<PostComment[]>(`/api/posts/${encodeURIComponent(postId)}/comments`)
       .then((items) => {
         if (!Array.isArray(items)) {
           throw new Error('The server returned an invalid comments response.');
         }
-        if (active) setComments(items);
+        if (active) {
+          setComments(items);
+          setLoadError('');
+          setLoadedPostId(postId);
+        }
       })
       .catch((fetchError: unknown) => {
         if (active) {
           setLoadError(fetchError instanceof Error ? fetchError.message : 'Unable to load comments.');
+          setLoadedPostId(postId);
         }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
       });
 
     return () => {
