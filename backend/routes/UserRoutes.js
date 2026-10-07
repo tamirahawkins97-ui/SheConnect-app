@@ -6,7 +6,8 @@ const verifyAuthentication = require('../middleware/verifyAuthentication');
 const adminOnly = require('../middleware/AdminOnly');
 
 //I.N.D.U.C.E.S
-router.get("/", verifyAuthentication, authController.getUser);
+router.get("/", verifyAuthentication, authController.getUsers);
+router.get("/me", verifyAuthentication, authController.getUser);
 router.get("/admin", verifyAuthentication, adminOnly, authController.getUser);
 router.post("/register", authController.registerUser);
 router.post("/login", authController.loginUser);

@@ -7,15 +7,12 @@ const connectDB = require('./db/connection');
 const PORT = process.env.PORT || 1111;
 const cors = require('cors');
 
-//DATABASE CONNECTION
-connectDB();
-
 //CORS middleware Configuration
 app.use(
     cors({
         origin: 'http://localhost:5173', //Vite dev server URL
         credentials: true,  //Allows auth headers, cookies, and tokens.
-        methods: ['GET', 'POST', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+        methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization'] //Now granted access to auth headers.
     })
 );
@@ -40,6 +37,16 @@ app.use('/api/users', UserRoutes)
 app.use('/api/posts', PostRoutes);
 
 //PORT 
-app.listen(PORT, () =>{
-    console.log(`Server is now running on port: http://localhost:${PORT}`);
-})
+async function startServer() {
+    try {
+        await connectDB();
+        app.listen(PORT, () => {
+            console.log(`Server is now running on port: http://localhost:${PORT}`);
+        });
+    } catch (error) {
+        console.error('Unable to start the server because MongoDB connection failed:', error);
+        process.exitCode = 1;
+    }
+}
+
+startServer();

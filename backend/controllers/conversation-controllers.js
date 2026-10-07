@@ -1,128 +1,207 @@
-const Conversation = require('../models/conversation');
+const mongoose = require('mongoose');
+const Conversation = require('../models/Conversation');
 
-const getAuthUserId = (req) => req.user?.id || req.user?._id;
+const getAuthUserId = (req) => req.user?._id || req.user?.id;
 
-// 1. Returns active conversations with last message preview and unread count
+function isValidId(value) {
+  return mongoose.isValidObjectId(value);
+}
+
+function getLastMessage(conversation) {
+  return conversation.messages?.[conversation.messages.length - 1] || null;
+}
+
+function getSenderId(message) {
+  return message.sender?._id?.toString() || message.sender?.toString() || '';
+}
+
 async function getUserConversations(req, res) {
   try {
     const currentUserId = getAuthUserId(req);
     if (!currentUserId) {
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(401).json({ message: 'User not authenticated.' });
     }
 
-    // Find all conversations containing the authenticated user
-    const conversations = await Conversation.find({
-      participants: currentUserId,
-    })
-      .populate('participants', 'displayName profilePic username')
+    const conversations = await Conversation.find({ participants: currentUserId })
+      .populate('participants', 'username role')
+      .populate('messages.sender', 'username')
       .sort({ updatedAt: -1 });
 
-    const conversationList = conversations.map((convo) => {
-      // The other person in the chat
-      const otherUser = convo.participants.find(
-        (p) => p._id.toString() !== currentUserId.toString()
+    const conversationList = conversations.map((conversation) => {
+      const participant = conversation.participants.find(
+        (user) => user._id.toString() !== currentUserId.toString()
       );
-
-      // Grab the last embedded message in the array
-      const lastMsg = convo.messages?.length
-        ? convo.messages[convo.messages.length - 1]
-        : null;
-
-      // Count unread messages sent by the other person to me
-      const unreadCount = convo.messages.filter(
-        (msg) => msg.sender.toString() !== currentUserId.toString() && !msg.read
+      const lastMessage = getLastMessage(conversation);
+      const unreadCount = conversation.messages.filter(
+        (message) =>
+          getSenderId(message) !== currentUserId.toString() &&
+          !message.read
       ).length;
 
       return {
-        _id: convo._id,
-        participant: otherUser || null,
-        lastMessage: lastMsg
+        _id: conversation._id,
+        type: conversation.type,
+        groupTitle: conversation.groupTitle,
+        participants: conversation.participants,
+        participant: participant || null,
+        lastMessage: lastMessage
           ? {
-              text: lastMsg.text,
-              createdAt: lastMsg.createdAt,
-              isSender: lastMsg.sender.toString() === currentUserId.toString(),
+              _id: lastMessage._id,
+              text: lastMessage.text,
+              sender: getSenderId(lastMessage),
+              createdAt: lastMessage.createdAt,
             }
           : null,
         unreadCount,
-        updatedAt: convo.updatedAt,
+        updatedAt: conversation.updatedAt,
       };
     });
 
     return res.status(200).json(conversationList);
   } catch (error) {
     console.error('Error fetching conversations:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    return res.status(500).json({ message: 'Unable to fetch conversations.' });
   }
 }
 
-// 2. Fetches historical message logs between authenticated user and :userId
-async function getConversationByUserId(req, res) {
+async function getConversationMessages(req, res) {
   try {
     const currentUserId = getAuthUserId(req);
-    const { userId } = req.params;
+    const { id } = req.params;
 
     if (!currentUserId) {
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(401).json({ message: 'User not authenticated.' });
+    }
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid conversation id.' });
     }
 
-    // Find thread where BOTH users are in the participants array
     const conversation = await Conversation.findOne({
-      participants: { $all: [currentUserId, userId] },
-    }).populate('participants', 'displayName profilePic username');
+      _id: id,
+      participants: currentUserId,
+    })
+      .populate('participants', 'username role')
+      .populate('messages.sender', 'username');
 
     if (!conversation) {
-      // If no past chat exists, return empty array so UI can render blank thread
-      return res.status(200).json({ messages: [], conversationId: null });
+      return res.status(404).json({ message: 'Conversation not found.' });
+    }
+
+    const hasUnreadIncoming = conversation.messages.some(
+      (message) =>
+        getSenderId(message) !== currentUserId.toString() &&
+        !message.read
+    );
+
+    if (hasUnreadIncoming) {
+      conversation.messages.forEach((message) => {
+        if (getSenderId(message) !== currentUserId.toString()) {
+          message.read = true;
+        }
+      });
+      await conversation.save();
     }
 
     return res.status(200).json({
       _id: conversation._id,
+      type: conversation.type,
+      groupTitle: conversation.groupTitle,
       participants: conversation.participants,
-      messages: conversation.messages, // chronological array of subdocuments
+      messages: conversation.messages,
     });
   } catch (error) {
-    console.error('Error fetching conversation history:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error fetching conversation messages:', error);
+    return res.status(500).json({ message: 'Unable to fetch messages.' });
   }
 }
 
-// 3. Marks all incoming messages from :userId as read: true
+async function sendConversationMessage(req, res) {
+  try {
+    const currentUserId = getAuthUserId(req);
+    const { id } = req.params;
+    const text = typeof req.body?.text === 'string' ? req.body.text.trim() : '';
+
+    if (!currentUserId) {
+      return res.status(401).json({ message: 'User not authenticated.' });
+    }
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid conversation id.' });
+    }
+    if (!text) {
+      return res.status(400).json({ message: 'Message text is required.' });
+    }
+    if (text.length > 5000) {
+      return res.status(400).json({ message: 'Message text cannot exceed 5000 characters.' });
+    }
+
+    const conversation = await Conversation.findOne({
+      _id: id,
+      participants: currentUserId,
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found.' });
+    }
+
+    conversation.messages.push({ sender: currentUserId, text });
+    conversation.updatedAt = new Date();
+    await conversation.save();
+    await conversation.populate('messages.sender', 'username');
+
+    const message = conversation.messages[conversation.messages.length - 1];
+    return res.status(201).json(message);
+  } catch (error) {
+    console.error('Error sending conversation message:', error);
+    return res.status(500).json({ message: 'Unable to send message.' });
+  }
+}
+
 async function markConversationAsRead(req, res) {
   try {
     const currentUserId = getAuthUserId(req);
-    const { userId: senderId } = req.params;
+    const { id } = req.params;
 
     if (!currentUserId) {
-      return res.status(401).json({ message: 'User not authenticated' });
+      return res.status(401).json({ message: 'User not authenticated.' });
+    }
+    if (!isValidId(id)) {
+      return res.status(400).json({ message: 'Invalid conversation id.' });
     }
 
-    // Update messages in the embedded array where sender is :userId and read is false
-    const result = await Conversation.updateOne(
-      {
-        participants: { $all: [currentUserId, senderId] },
-      },
-      {
-        $set: {
-          'messages.$[elem].read': true,
-        },
-      },
-      {
-        arrayFilters: [{ 'elem.sender': senderId, 'elem.read': false }],
+    const conversation = await Conversation.findOne({
+      _id: id,
+      participants: currentUserId,
+    });
+
+    if (!conversation) {
+      return res.status(404).json({ message: 'Conversation not found.' });
+    }
+
+    let modifiedCount = 0;
+    conversation.messages.forEach((message) => {
+      if (getSenderId(message) !== currentUserId.toString() && !message.read) {
+        message.read = true;
+        modifiedCount += 1;
       }
-    );
+    });
+
+    if (modifiedCount > 0) {
+      await conversation.save();
+    }
 
     return res.status(200).json({
-      message: 'Incoming messages marked as read',
-      modifiedCount: result.modifiedCount,
+      message: 'Incoming messages marked as read.',
+      modifiedCount,
     });
   } catch (error) {
-    console.error('Error marking messages read:', error);
-    return res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('Error marking conversation as read:', error);
+    return res.status(500).json({ message: 'Unable to mark messages as read.' });
   }
 }
 
 module.exports = {
   getUserConversations,
-  getConversationByUserId,
+  getConversationMessages,
+  sendConversationMessage,
   markConversationAsRead,
 };

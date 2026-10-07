@@ -1,5 +1,26 @@
 const mongoose = require('mongoose');
 
+const messageSchema = new mongoose.Schema(
+  {
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    text: {
+      type: String,
+      required: true,
+      trim: true,
+      maxlength: 5000,
+    },
+    read: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true }
+);
+
 const conversationSchema = new mongoose.Schema(
   {
     type: {
@@ -39,10 +60,13 @@ const conversationSchema = new mongoose.Schema(
       },
     },
     lastMessage: {
-      // Option A: Reference to a Message document
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Message',
       default: null,
+    },
+    messages: {
+      type: [messageSchema],
+      default: [],
     },
   },
   {
@@ -51,14 +75,13 @@ const conversationSchema = new mongoose.Schema(
 );
 
 // Prevent direct chats from exceeding 2 participants or maxParticipants limits
-conversationSchema.pre('validate', function (next) {
+conversationSchema.pre('validate', function () {
   if (this.type === 'direct' && this.participants.length > 2) {
-    return next(new Error('Direct conversations cannot have more than 2 participants'));
+    throw new Error('Direct conversations cannot have more than 2 participants');
   }
   if (this.maxParticipants && this.participants.length > this.maxParticipants) {
-    return next(new Error(`Participant count exceeds the maximum limit of ${this.maxParticipants}`));
+    throw new Error(`Participant count exceeds the maximum limit of ${this.maxParticipants}`);
   }
-  next();
 });
 
 // Essential indexes for fast chat inbox queries

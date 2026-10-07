@@ -1,6 +1,5 @@
 const path = require('path');
 const mongoose = require('mongoose');
-const { faker } = require('@faker-js/faker');
 const dotenv = require('dotenv');
 const connectDB = require('../db/connection');
 const User = require('../models/User');
@@ -8,61 +7,81 @@ const Post = require('../models/Post');
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-const SEED_COUNT_USERS = 10;
-const SEED_COUNT_POSTS_PER_USER = 3;
+const DEMO_PASSWORD = 'SeedPassword123!';
+const DEMO_USERS = [
+  { username: 'mama.maya', email: 'maya@sheconnect.test' },
+  { username: 'mama.olivia', email: 'olivia@sheconnect.test' },
+  { username: 'mama.sophia', email: 'sophia@sheconnect.test' },
+  { username: 'mama.amara', email: 'amara@sheconnect.test' },
+  { username: 'mama.ella', email: 'ella@sheconnect.test' },
+  { username: 'mama.naomi', email: 'naomi@sheconnect.test' },
+  { username: 'mama.zara', email: 'zara@sheconnect.test' },
+  { username: 'mama.luna', email: 'luna@sheconnect.test' },
+  { username: 'mama.aria', email: 'aria@sheconnect.test' },
+  { username: 'mama.grace', email: 'grace@sheconnect.test' },
+];
+const DEMO_POSTS = [
+  'Taking a moment to celebrate the little milestones and the people who understand this journey.',
+  'A gentle reminder to give yourself grace today. You are doing better than you think.',
+  'Checking in with the community: what has brought you a little joy this week?',
+];
 
 async function seedDatabase() {
   try {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('Refusing to run a destructive seed script in production.');
+      throw new Error('Refusing to create demo data in production.');
     }
 
     await connectDB();
 
-    console.log('--- Seeding Process Started ---');
+    console.log('--- Adding SheConnect demo data (existing data is preserved) ---');
 
-    await Post.deleteMany({});
-    await User.deleteMany({});
-    console.log('Cleared existing Users and Posts collections.');
+    const demoUsers = [];
+    let createdUserCount = 0;
+    for (const demoUser of DEMO_USERS) {
+      let user = await User.findOne({ email: demoUser.email });
 
-    const createdUsers = [];
+      if (!user) {
+        const usernameTaken = await User.exists({ username: demoUser.username });
+        if (usernameTaken) {
+          console.warn(`Skipping reserved demo username: ${demoUser.username}`);
+          continue;
+        }
 
-    console.log('Generating fake users...');
-    for (let i = 0; i < SEED_COUNT_USERS; i++) {
-      const user = await User.create({
-        username: faker.internet.username().toLowerCase(),
-        email: faker.internet.email().toLowerCase(),
-        password: 'SeedPassword123!',
-      });
-      createdUsers.push(user);
-    }
-    console.log(`Successfully seeded ${createdUsers.length} users.`);
-
-    const postsToInsert = [];
-    console.log('Generating fake posts...');
-    const trimesters = ['1st Trimester', '2nd Trimester', '3rd Trimester', 'Postpartum'];
-
-    for (const user of createdUsers) {
-      for (let j = 0; j < SEED_COUNT_POSTS_PER_USER; j++) {
-        const gestationalWeek = faker.number.int({ min: 4, max: 40 });
-        postsToInsert.push({
-          userId: user._id,
-          message: faker.lorem.paragraph({ min: 2, max: 4 }),
-          imageURL: faker.image.url(),
-          Week: gestationalWeek,
-          Day: faker.number.int({ min: 1, max: 7 }),
-          Trimester: faker.helpers.arrayElement(trimesters),
-          dueDate: faker.date.future({ years: 1 }).toISOString(),
+        user = await User.create({
+          ...demoUser,
+          password: DEMO_PASSWORD,
         });
+        createdUserCount += 1;
+      }
+
+      demoUsers.push(user);
+    }
+
+    let createdPostCount = 0;
+    for (const user of demoUsers) {
+      for (const message of DEMO_POSTS) {
+        const existingPost = await Post.exists({ userId: user._id, message });
+        if (existingPost) continue;
+
+        await Post.create({
+          userId: user._id,
+          message,
+          Week: 24,
+          Day: 3,
+          Trimester: '2nd Trimester',
+          dueDate: new Date(Date.now() + 16 * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        });
+        createdPostCount += 1;
       }
     }
 
-    await Post.insertMany(postsToInsert);
-    console.log(`Successfully seeded ${postsToInsert.length} posts.`);
-
-    console.log('--- Seeding Completed Successfully! ---');
+    console.log(`Demo users created: ${createdUserCount}; demo posts created: ${createdPostCount}.`);
+    console.log(`Demo login (newly created accounts): ${DEMO_USERS[0].email} / ${DEMO_PASSWORD}`);
+    console.log('Existing users and posts were not deleted or modified.');
+    console.log('--- Seeding Completed Successfully ---');
   } catch (error) {
-    console.error('CRITICAL ERROR DURING SEEDING:', error);
+    console.error('Demo data seeding failed:', error);
     process.exitCode = 1;
   } finally {
     await mongoose.disconnect();

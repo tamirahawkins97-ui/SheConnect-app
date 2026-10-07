@@ -2,6 +2,20 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 
+async function getUsers(req, res) {
+  try {
+    const users = await User.find({ _id: { $ne: req.user._id } })
+      .select("username role")
+      .sort({ username: 1 })
+      .limit(100);
+
+    res.status(200).json(users);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Unable to fetch community members." });
+  }
+}
+
 async function getUser(req, res) {
   try {
     if (!req.user) return res.status(401).json({ message: "User must register or log in." });
@@ -56,6 +70,7 @@ async function loginUser(req, res) {
 };
 
 module.exports = {
+  getUsers,
   getUser,
   registerUser,
   loginUser

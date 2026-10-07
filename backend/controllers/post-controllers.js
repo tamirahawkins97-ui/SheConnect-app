@@ -1,123 +1,129 @@
-//DEPENDANCIES 
+const mongoose = require('mongoose');
 const Post = require('../models/Post');
 
-// Helper to safely extract user ID
-const getAuthUserId = (req) => req.user?.id || req.user?._id;
+const getAuthUserId = (req) => req.user?._id || req.user?.id;
 
 async function getUserPosts(req, res) {
-
-    try {
-    const { id } = req.params.id; 
-    // 1. Find all posts where user matches the user ID
-    // 2. Sort by newest first (-1)
-    const posts = await Post.Find({user: id}).sort({createdAt: -1})
+  try {
+    const posts = await Post.find({})
+      .populate('userId', 'username')
+      .sort({ createdAt: -1 })
+      .limit(100);
 
     return res.status(200).json(posts);
+  } catch (error) {
+    console.error('Unable to fetch posts:', error);
+    return res.status(500).json({ message: 'Unable to fetch posts.' });
+  }
+}
 
-    } catch (error) {
-        console.error('Unable to fetch user posts:', error);
-        return res.status(500).json({message:'Sever error fetching posts', error: error.message});
+async function getSinglePost(req, res) {
+  try {
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid post id.' });
     }
-};
 
-async function getSinglePost(req,res) {
-    try {
-        const userId = getAuthUserId(req)
-        if (!userId) {
-            return res.status(401).json({ message: 'Unable to fetch User. Invalid user Id.'});
-        }
-
-        const post = await Post.findById(req.params.id)
-
-        if (!post) {
-            return res.status(404).json({message: 'Post not found'});
-        }
-
-        // Ownership check
-        if (note.user.toString() !== userId.toString()) {
-            return res.status(403).json({message: 'User not authorized to access this post'})
-        }
-
-        return res.status(200).json(post)
-
-    } catch (error) {
-        console.error('Error fetching post:', error)
-        return res.status(500).json({message: 'Server error fetching post', error: error.message });
+    const post = await Post.findById(req.params.id).populate('userId', 'username');
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found.' });
     }
-};
 
-async function updatePost(req,res){
-    try{
-        const userId = getAuthUserId(req)
-        if(!userId){
-            return res.status(401).json({ message: 'Unable to fetch User. Invalid user Id.'})
-        }
+    return res.status(200).json(post);
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    return res.status(500).json({ message: 'Unable to fetch post.' });
+  }
+}
 
-        const updatedPost = await Post.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            {new: true, runValidators: true }
-        );
-        
-        return res.status(200).json(updatePost)
-    } catch (error){
-        console.error('Error updating post:', error)
-        return res.status(500).json({message: 'Server error updating post', error: error.message})
+async function updatePost(req, res) {
+  try {
+    const userId = getAuthUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication is required.' });
     }
-};
-
-async function deleteUserPost(req,res) {
-    try {
-        const userId = getAuthUserId;
-
-        if(!userId) {
-            return res.status(401).json({message: 'Unable to delete post. Invalid User id'})
-        }
-
-        const deletedPost = await Post.findByIdAndDelete(req.params.id)
-
-        if(!deletedPost) {
-            return res.status(404).json({message: 'Post not found to delete.'});
-        }
-
-        res.status(200).json({message: 'Post successfully deleted!'});
-
-    } catch (error) {
-        console.error('Unable to delete post', error)
-        return res.status(500).json({message: 'Server error deleting post', error: error.message})
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid post id.' });
     }
-};
 
-async function createUserPost(req, res){
-    try {
-        const { imageURL, message, day, week, trimester, dueDate } = req.body;
-        const userId = getAuthUserId(req) 
-        if(!userId) {
-            return res.status(401).json({message: 'Incorrect User id. Please try again.'})
-        }
+    const allowedFields = ['message', 'imageURL', 'Day', 'Week', 'Trimester', 'dueDate'];
+    const updates = Object.fromEntries(
+      allowedFields
+        .filter((field) => Object.hasOwn(req.body, field))
+        .map((field) => [field, req.body[field]])
+    );
 
-        const post = await Post.create({
-            message,
-            imageURL, 
-            day,
-            week, 
-            trimester,
-            dueDate,
-            user: userId 
-        });
-
-        return res.status(201).json(post);
-
-    } catch (error) {
-        console.error('Error creating post :(', error)
-        return res.status(500).json({ message: 'Server error creating note', error: error.message });
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: 'No valid post fields were provided.' });
     }
-};
+
+    const updatedPost = await Post.findOneAndUpdate(
+      { _id: req.params.id, userId },
+      { $set: updates },
+      { new: true, runValidators: true }
+    ).populate('userId', 'username');
+
+    if (!updatedPost) {
+      return res.status(404).json({ message: 'Post not found or you do not own it.' });
+    }
+
+    return res.status(200).json(updatedPost);
+  } catch (error) {
+    console.error('Error updating post:', error);
+    return res.status(400).json({ message: error.message || 'Unable to update post.' });
+  }
+}
+
+async function deleteUserPost(req, res) {
+  try {
+    const userId = getAuthUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication is required.' });
+    }
+    if (!mongoose.isValidObjectId(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid post id.' });
+    }
+
+    const deletedPost = await Post.findOneAndDelete({ _id: req.params.id, userId });
+    if (!deletedPost) {
+      return res.status(404).json({ message: 'Post not found or you do not own it.' });
+    }
+
+    return res.status(200).json({ message: 'Post successfully deleted.' });
+  } catch (error) {
+    console.error('Unable to delete post:', error);
+    return res.status(500).json({ message: 'Unable to delete post.' });
+  }
+}
+
+async function createUserPost(req, res) {
+  try {
+    const userId = getAuthUserId(req);
+    if (!userId) {
+      return res.status(401).json({ message: 'Authentication is required.' });
+    }
+
+    const post = await Post.create({
+      userId,
+      imageURL: req.body.imageURL || '',
+      message: req.body.message,
+      Day: req.body.Day,
+      Week: req.body.Week,
+      Trimester: req.body.Trimester,
+      dueDate: req.body.dueDate,
+    });
+
+    await post.populate('userId', 'username');
+    return res.status(201).json(post);
+  } catch (error) {
+    console.error('Error creating post:', error);
+    return res.status(400).json({ message: error.message || 'Unable to create post.' });
+  }
+}
 
 module.exports = {
-createUserPost, 
-deleteUserPost,
-updatePost, 
-getSinglePost,
-getUserPosts
-}
+  createUserPost,
+  deleteUserPost,
+  updatePost,
+  getSinglePost,
+  getUserPosts,
+};
