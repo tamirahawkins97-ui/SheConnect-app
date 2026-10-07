@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import SocialHub from './pages/SocialHub';
 import Feed from './pages/Feed';
 import Auth from './pages/Auth';
+import Settings from './pages/Settings';
 import CreatePostCard from './components/feed/CreatePostCard';
 
 function AuthenticatedLayout() {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/social" element={<SocialHub />} />
             <Route path="/conversations" element={<SocialHub />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
         </Route>
 

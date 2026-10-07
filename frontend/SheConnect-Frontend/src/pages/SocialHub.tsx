@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Check,
@@ -7,11 +7,14 @@ import {
   Heart,
   MessageCircle,
   MoreHorizontal,
+  Plus,
   Search,
   Send,
+  Settings,
   Smile,
   Sparkles,
   Users,
+  X,
 } from 'lucide-react';
 import type { ConversationType, User } from '../types';
 import { apiFetch } from '../utils/api';
@@ -65,6 +68,7 @@ function initials(name?: string | null): string {
 }
 
 function SocialHub() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const requestedUserId = searchParams.get('userId');
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
@@ -77,6 +81,16 @@ function SocialHub() {
   const currentUserId = typeof currentUserClaim === 'string' ? currentUserClaim : '';
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState('');
+  const [newMessageOpen, setNewMessageOpen] = useState(false);
+  const [communityUsers, setCommunityUsers] = useState<ChatPerson[]>([]);
+  const [loadingPeople, setLoadingPeople] = useState(false);
+  const [peopleError, setPeopleError] = useState('');
+  const [newConversationType, setNewConversationType] = useState<ConversationType>('direct');
+  const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
+  const [newGroupTitle, setNewGroupTitle] = useState('');
+  const [peopleSearch, setPeopleSearch] = useState('');
+  const [creatingConversation, setCreatingConversation] = useState(false);
+  const [createConversationError, setCreateConversationError] = useState('');
   const [loadingThreads, setLoadingThreads] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
@@ -128,12 +142,40 @@ function SocialHub() {
     apiFetch<ConversationDetails>(`/api/conversations/${encodeURIComponent(activeId)}/messages`)
       .then((conversation) => {
         if (!active) return;
-        setMessages(conversation.messages || []);
+        const loadedMessages = conversation.messages || [];
+        setMessages(loadedMessages);
         setMessagesConversationId(activeId);
         setMessageFailure(null);
-        setConversations((items) =>
-          items.map((item) => item._id === activeId ? { ...item, unreadCount: 0 } : item)
+
+        const unreadIncoming = loadedMessages.filter(
+          (message) => senderId(message.sender) !== currentUserId && !message.read
         );
+        if (unreadIncoming.length === 0) return;
+
+        Promise.all(
+          unreadIncoming.map((message) =>
+            apiFetch<{ message: string }>(
+              `/api/conversations/${encodeURIComponent(activeId)}/messages/${encodeURIComponent(message._id)}/read`,
+              { method: 'PATCH' }
+            )
+          )
+        )
+          .then(() => {
+            if (!active) return;
+            const readIds = new Set(unreadIncoming.map((message) => message._id));
+            setMessages((items) => items.map((message) => readIds.has(message._id) ? { ...message, read: true } : message));
+            setConversations((items) =>
+              items.map((item) => item._id === activeId ? { ...item, unreadCount: 0 } : item)
+            );
+          })
+          .catch((readError: unknown) => {
+            if (active) {
+              setMessageFailure({
+                conversationId: activeId,
+                message: readError instanceof Error ? readError.message : 'Messages loaded, but read receipts could not be updated.',
+              });
+            }
+          });
       })
       .catch((fetchError: unknown) => {
         if (active) {
@@ -150,6 +192,30 @@ function SocialHub() {
       active = false;
     };
   }, [activeId]);
+
+  useEffect(() => {
+    if (!newMessageOpen) return;
+
+    let active = true;
+    setLoadingPeople(true);
+    setPeopleError('');
+    apiFetch<ChatPerson[]>('/api/users')
+      .then((items) => {
+        if (active) setCommunityUsers(items);
+      })
+      .catch((fetchError: unknown) => {
+        if (active) {
+          setPeopleError(fetchError instanceof Error ? fetchError.message : 'Unable to load community members.');
+        }
+      })
+      .finally(() => {
+        if (active) setLoadingPeople(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [newMessageOpen]);
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
@@ -171,6 +237,11 @@ function SocialHub() {
         conversation.lastMessage?.text.toLocaleLowerCase().includes(term);
     });
   }, [conversations, search]);
+  const filteredPeople = useMemo(() => {
+    const term = peopleSearch.trim().toLocaleLowerCase();
+    if (!term) return communityUsers;
+    return communityUsers.filter((person) => person.username.toLocaleLowerCase().includes(term));
+  }, [communityUsers, peopleSearch]);
 
   async function handleSend(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -232,6 +303,60 @@ function SocialHub() {
     }
   }
 
+  function toggleRecipient(userId: string) {
+    setSelectedRecipientIds((selectedIds) => {
+      if (selectedIds.includes(userId)) {
+        return selectedIds.filter((id) => id !== userId);
+      }
+      return newConversationType === 'direct' ? [userId] : [...selectedIds, userId];
+    });
+  }
+
+  async function handleCreateConversation(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (creatingConversation) return;
+
+    if (newConversationType === 'direct' && selectedRecipientIds.length !== 1) {
+      setCreateConversationError('Choose one person to start a direct message.');
+      return;
+    }
+    if (newConversationType === 'group' && selectedRecipientIds.length < 2) {
+      setCreateConversationError('Choose at least two people for a group conversation.');
+      return;
+    }
+    if (newConversationType === 'group' && !newGroupTitle.trim()) {
+      setCreateConversationError('Add a name for your group conversation.');
+      return;
+    }
+
+    setCreatingConversation(true);
+    setCreateConversationError('');
+    try {
+      const conversation = await apiFetch<ConversationSummary>('/api/conversations', {
+        method: 'POST',
+        body: newConversationType === 'direct'
+          ? { type: 'direct', recipientId: selectedRecipientIds[0] }
+          : { type: 'group', participantIds: selectedRecipientIds, groupTitle: newGroupTitle.trim() },
+      });
+
+      setConversations((items) => [
+        conversation,
+        ...items.filter((item) => item._id !== conversation._id),
+      ]);
+      setMessages([]);
+      setMessagesConversationId(null);
+      setActiveId(conversation._id);
+      setNewMessageOpen(false);
+      setSelectedRecipientIds([]);
+      setNewGroupTitle('');
+      setPeopleSearch('');
+    } catch (createError) {
+      setCreateConversationError(createError instanceof Error ? createError.message : 'Unable to start this conversation.');
+    } finally {
+      setCreatingConversation(false);
+    }
+  }
+
   return (
     <main className="min-h-[calc(100vh-5rem)] bg-[radial-gradient(ellipse_at_top_left,_rgba(255,228,230,0.62),_transparent_42%),linear-gradient(145deg,#fffdfc_0%,#fff7f7_52%,#fffaf4_100%)] px-4 py-7 text-zinc-700 sm:px-6 lg:px-8">
       <section className="mx-auto max-w-7xl">
@@ -244,10 +369,16 @@ function SocialHub() {
             <h1 className="font-glam text-3xl font-semibold tracking-tight text-zinc-800 sm:text-4xl">A little closer, even from afar.</h1>
             <p className="mt-2 max-w-xl text-sm leading-6 text-zinc-500">A soft place to check in, share the little things, and show up for one another.</p>
           </div>
-          <div className="hidden items-center gap-2 rounded-full border border-white/90 bg-white/70 px-3 py-2 text-xs text-zinc-500 shadow-sm sm:flex">
-            <span className="size-2 rounded-full bg-emerald-400 ring-4 ring-emerald-100" />
-            Your community is here
-          </div>
+          <button
+            className="inline-flex items-center gap-2 rounded-full border border-white/90 bg-white/70 px-3 py-2 text-xs font-medium text-zinc-500 shadow-sm transition hover:scale-105 hover:bg-white hover:text-rose-600 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95"
+            type="button"
+            onClick={() => navigate('/settings')}
+            aria-label="Open settings"
+            title="Settings"
+          >
+            <Settings size={15} className="text-rose-400" aria-hidden="true" />
+            Settings
+          </button>
         </header>
 
         <div className="grid min-h-[min(72vh,760px)] overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/75 shadow-[0_10px_30px_rgba(244,63,94,0.06)] backdrop-blur-xl md:grid-cols-[330px_minmax(0,1fr)]">
@@ -258,9 +389,18 @@ function SocialHub() {
                   <h2 className="font-glam text-xl font-semibold text-zinc-800">Messages</h2>
                   <p className="mt-0.5 text-xs text-zinc-400">Your circle, all in one place</p>
                 </div>
-                <span className="grid size-10 place-items-center rounded-2xl bg-rose-50 text-rose-400">
-                  <Heart size={18} aria-hidden="true" />
-                </span>
+                <button
+                  className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-3 py-2 text-xs font-semibold text-white shadow-sm transition hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95"
+                  type="button"
+                  onClick={() => {
+                    setCreateConversationError('');
+                    setNewMessageOpen(true);
+                  }}
+                >
+                  <Plus size={15} aria-hidden="true" />
+                  <span className="hidden sm:inline">New message</span>
+                  <span className="sm:hidden">New</span>
+                </button>
               </div>
               <label className="flex h-11 items-center gap-2.5 rounded-full border border-rose-100 bg-rose-50/50 px-4 text-zinc-400 transition focus-within:border-rose-300 focus-within:bg-white focus-within:ring-4 focus-within:ring-rose-100/60">
                 <Search size={16} aria-hidden="true" />
@@ -477,6 +617,156 @@ function SocialHub() {
             )}
           </section>
         </div>
+
+        {newMessageOpen && (
+          <div
+            className="fixed inset-0 z-50 grid place-items-center bg-zinc-900/30 p-4 backdrop-blur-sm"
+            onMouseDown={(event) => {
+              if (event.target === event.currentTarget && !creatingConversation) setNewMessageOpen(false);
+            }}
+          >
+            <section
+              className="w-full max-w-lg overflow-hidden rounded-[1.75rem] border border-rose-100/80 bg-white shadow-[0_20px_60px_rgba(124,45,75,0.18)]"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="new-message-title"
+            >
+              <header className="flex items-start justify-between border-b border-rose-100/80 px-5 py-4 sm:px-6">
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-400">A new connection</p>
+                  <h2 id="new-message-title" className="mt-1 font-glam text-xl font-semibold text-zinc-800">Start a message</h2>
+                </div>
+                <button
+                  className="grid size-9 place-items-center rounded-full text-zinc-400 transition hover:scale-105 hover:bg-rose-50 hover:text-rose-600 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95"
+                  type="button"
+                  onClick={() => setNewMessageOpen(false)}
+                  disabled={creatingConversation}
+                  aria-label="Close new message"
+                >
+                  <X size={18} />
+                </button>
+              </header>
+
+              <form onSubmit={handleCreateConversation}>
+                <div className="space-y-4 px-5 py-5 sm:px-6">
+                  <fieldset>
+                    <legend className="mb-2 text-xs font-semibold text-zinc-600">Conversation type</legend>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(['direct', 'group'] as const).map((type) => (
+                        <button
+                          className={`rounded-full border px-4 py-2.5 text-sm font-medium transition hover:scale-[1.02] active:scale-95 ${
+                            newConversationType === type
+                              ? 'border-rose-300 bg-rose-50 text-rose-700 shadow-sm'
+                              : 'border-rose-100 bg-white text-zinc-500 hover:bg-rose-50/60'
+                          }`}
+                          key={type}
+                          type="button"
+                          onClick={() => {
+                            setNewConversationType(type);
+                            setSelectedRecipientIds([]);
+                            setCreateConversationError('');
+                          }}
+                          aria-pressed={newConversationType === type}
+                        >
+                          {type === 'direct' ? 'One-to-one' : 'Group'}
+                        </button>
+                      ))}
+                    </div>
+                  </fieldset>
+
+                  {newConversationType === 'group' && (
+                    <label className="block text-xs font-semibold text-zinc-600">
+                      Group name
+                      <input
+                        className="mt-2 h-11 w-full rounded-2xl border border-rose-100 bg-rose-50/30 px-4 text-sm font-normal text-zinc-700 outline-none placeholder:text-zinc-400 focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100/70"
+                        value={newGroupTitle}
+                        onChange={(event) => setNewGroupTitle(event.target.value)}
+                        placeholder="e.g. Due Date Daydreamers"
+                        maxLength={100}
+                        required
+                      />
+                    </label>
+                  )}
+
+                  <div>
+                    <label className="mb-2 block text-xs font-semibold text-zinc-600" htmlFor="new-message-people-search">
+                      {newConversationType === 'direct' ? 'Choose a person' : 'Choose at least two people'}
+                    </label>
+                    <div className="flex h-10 items-center gap-2 rounded-full border border-rose-100 bg-rose-50/40 px-3 text-zinc-400 focus-within:border-rose-300 focus-within:bg-white">
+                      <Search size={15} aria-hidden="true" />
+                      <input
+                        id="new-message-people-search"
+                        className="min-w-0 flex-1 bg-transparent text-sm text-zinc-700 outline-none placeholder:text-zinc-400"
+                        type="search"
+                        value={peopleSearch}
+                        onChange={(event) => setPeopleSearch(event.target.value)}
+                        placeholder="Search community"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="max-h-56 overflow-y-auto rounded-2xl border border-rose-100/80 bg-rose-50/20 p-1.5">
+                    {loadingPeople ? (
+                      <p className="p-5 text-center text-sm text-zinc-400">Finding your community…</p>
+                    ) : peopleError ? (
+                      <p className="p-5 text-center text-sm text-rose-700" role="alert">{peopleError}</p>
+                    ) : filteredPeople.length === 0 ? (
+                      <p className="p-5 text-center text-sm text-zinc-400">No community members found.</p>
+                    ) : (
+                      filteredPeople.map((person) => {
+                        const checked = selectedRecipientIds.includes(person._id);
+                        return (
+                          <label
+                            className={`flex cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 transition ${
+                              checked ? 'bg-white shadow-sm ring-1 ring-rose-100' : 'hover:bg-white/80'
+                            }`}
+                            key={person._id}
+                          >
+                            <input
+                              className="size-4 accent-rose-500"
+                              type={newConversationType === 'direct' ? 'radio' : 'checkbox'}
+                              name="conversation-recipient"
+                              checked={checked}
+                              onChange={() => toggleRecipient(person._id)}
+                            />
+                            <span className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-rose-100 to-pink-100 text-xs font-semibold text-rose-600">
+                              {initials(person.username)}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate text-sm font-medium text-zinc-700">{person.username}</span>
+                            {checked && <Check size={15} className="text-rose-500" aria-hidden="true" />}
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {createConversationError && (
+                    <p className="rounded-xl bg-rose-50 px-3 py-2 text-xs text-rose-700" role="alert">{createConversationError}</p>
+                  )}
+                </div>
+
+                <footer className="flex justify-end gap-2 border-t border-rose-100/80 bg-rose-50/25 px-5 py-4 sm:px-6">
+                  <button
+                    className="rounded-full px-4 py-2.5 text-sm font-medium text-zinc-500 transition hover:scale-105 hover:bg-white hover:text-zinc-700 active:scale-95"
+                    type="button"
+                    onClick={() => setNewMessageOpen(false)}
+                    disabled={creatingConversation}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-400 to-pink-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
+                    type="submit"
+                    disabled={creatingConversation || loadingPeople || peopleError !== ''}
+                  >
+                    <Send size={14} aria-hidden="true" />
+                    {creatingConversation ? 'Starting…' : 'Start conversation'}
+                  </button>
+                </footer>
+              </form>
+            </section>
+          </div>
+        )}
       </section>
     </main>
   );

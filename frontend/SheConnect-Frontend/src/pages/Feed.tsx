@@ -267,9 +267,9 @@ export default function Feed() {
         <button
           className="ml-auto grid size-11 place-items-center rounded-full border border-rose-100/80 bg-white/80 text-rose-500 shadow-sm transition hover:scale-105 hover:bg-white hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95"
           type="button"
-          onClick={() => navigate('/profile')}
-          aria-label="Open profile settings"
-          title="Profile settings"
+          onClick={() => navigate('/settings')}
+          aria-label="Open settings"
+          title="Settings"
         >
           <Settings size={18} />
         </button>
@@ -294,7 +294,10 @@ export default function Feed() {
               <Users size={17} className="text-rose-400" /> Social Hub
             </Link>
             <Link className="flex items-center gap-3 rounded-full px-3 py-3 text-xs font-medium text-zinc-600 transition hover:scale-[1.02] hover:bg-rose-50 hover:text-rose-600 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] active:scale-95 sm:text-sm" to="/profile">
-              <Settings size={17} className="text-rose-400" /> Profile
+              <Heart size={17} className="text-rose-400" /> Profile
+            </Link>
+            <Link className="flex items-center gap-3 rounded-full px-3 py-3 text-xs font-medium text-zinc-600 transition hover:scale-[1.02] hover:bg-rose-50 hover:text-rose-600 hover:shadow-[0_0_15px_rgba(244,63,94,0.2)] active:scale-95 sm:text-sm" to="/settings">
+              <Settings size={17} className="text-rose-400" /> Settings
             </Link>
           </nav>
           <div className="mt-5 hidden rounded-2xl bg-gradient-to-br from-rose-50 to-pink-50/60 p-4 md:block">
