@@ -7,6 +7,7 @@ import Profile from './pages/Profile';
 import SocialHub from './pages/SocialHub';
 import Feed from './pages/Feed';
 import Auth from './pages/Auth';
+import CreatePostCard from './components/feed/CreatePostCard';
 
 function AuthenticatedLayout() {
   return (
@@ -31,6 +32,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AuthenticatedLayout />}>
             <Route path="/feed" element={<Feed />} />
+            <Route path="/create-post" element={<CreatePostCard />} />
             <Route path="/social" element={<SocialHub />} />
             <Route path="/conversations" element={<SocialHub />} />
             <Route path="/profile" element={<Profile />} />

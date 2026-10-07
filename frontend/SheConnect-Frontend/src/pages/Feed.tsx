@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import type { User } from '../types';
 import { apiFetch } from '../utils/api';
-import CommentSection from './CommentSection';
+import CommentThread from '../components/feed/CommentThread';
 
 type FeedUser = Pick<User, '_id' | 'username' | 'role'>;
 type FeedPost = {
@@ -31,6 +31,7 @@ type FeedPost = {
 type CurrentUserResponse = { message: string; user: FeedUser };
 type PostDraft = Pick<FeedPost, 'imageURL' | 'message' | 'Day' | 'Week' | 'Trimester' | 'dueDate'>;
 
+const trimesterOptions = ['1st Trimester', '2nd Trimester', '3rd Trimester', 'Postpartum'];
 const emptyDraft: PostDraft = {
   imageURL: '',
   message: '',
@@ -39,8 +40,6 @@ const emptyDraft: PostDraft = {
   Trimester: '1st Trimester',
   dueDate: '',
 };
-
-const trimesterOptions = ['1st Trimester', '2nd Trimester', '3rd Trimester', 'Postpartum'];
 
 function postOwnerId(post: FeedPost): string {
   return typeof post.userId === 'string' ? post.userId : post.userId._id;
@@ -161,7 +160,7 @@ export default function Feed() {
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [feedError, setFeedError] = useState('');
   const [usersError, setUsersError] = useState('');
-  const [editor, setEditor] = useState<'create' | string | null>(null);
+  const [editor, setEditor] = useState<string | null>(null);
   const [editorError, setEditorError] = useState('');
   const [savingPost, setSavingPost] = useState(false);
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
@@ -306,16 +305,16 @@ export default function Feed() {
         </aside>
 
         <main className="col-span-12 min-w-0 space-y-5 md:col-span-9 lg:col-span-7">
-          {editor && (
+          {editor && editingPost && (
             <PostEditor
-              key={editingPost?._id || 'new-post'}
+              key={editingPost._id}
               initialValue={editorInitialValue}
-              title={editingPost ? 'Edit your moment' : 'Share a moment'}
-              submitLabel={editingPost ? 'Save changes' : 'Share with the community'}
+              title="Edit your moment"
+              submitLabel="Save changes"
               submitting={savingPost}
               error={editorError}
               onCancel={() => { setEditor(null); setEditorError(''); }}
-              onSubmit={(draft) => savePost(draft, editingPost?._id)}
+              onSubmit={(draft) => savePost(draft, editingPost._id)}
             />
           )}
 
@@ -394,13 +393,13 @@ export default function Feed() {
                   </div>
                 )}
 
-                <CommentSection postId={post._id} />
+                <CommentThread postId={post._id} />
               </article>
             );
           })}
 
           <div className="flex justify-center pb-2 pt-1">
-            <button className="grid size-14 place-items-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-lg shadow-rose-300/40 transition hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95" type="button" onClick={() => { setEditor('create'); setEditorError(''); }} aria-label="Create a post" title="Share a moment">
+            <button className="grid size-14 place-items-center rounded-full bg-gradient-to-r from-rose-400 to-pink-500 text-white shadow-lg shadow-rose-300/40 transition hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95" type="button" onClick={() => navigate('/create-post')} aria-label="Create a post" title="Share a moment">
               <Plus size={26} />
             </button>
           </div>
