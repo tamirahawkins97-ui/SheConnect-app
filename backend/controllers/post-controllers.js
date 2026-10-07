@@ -102,13 +102,51 @@ async function createUserPost(req, res) {
       return res.status(401).json({ message: 'Authentication is required.' });
     }
 
+    const rawDay = req.body.day ?? req.body.Day;
+    const weekdayNumbers = {
+      Monday: 1,
+      Tuesday: 2,
+      Wednesday: 3,
+      Thursday: 4,
+      Friday: 5,
+      Saturday: 6,
+      Sunday: 7,
+    };
+    const normalizedDay = typeof rawDay === 'string' && weekdayNumbers[rawDay]
+      ? weekdayNumbers[rawDay]
+      : Number(rawDay);
+    const rawWeek = req.body.week ?? req.body.Week;
+    const weekMatch = typeof rawWeek === 'string' ? rawWeek.match(/^week\s*(\d+)$/i) : null;
+    const normalizedWeek = weekMatch ? Number(weekMatch[1]) : Number(rawWeek);
+    const imageURL = req.body.imageURL ?? req.body.image ?? '';
+    const trimester = req.body.trimester ?? req.body.Trimester;
+
+    if (!Number.isInteger(normalizedDay) || normalizedDay < 1 || normalizedDay > 7) {
+      return res.status(400).json({ message: 'Choose a valid day of the week.' });
+    }
+    if (!Number.isInteger(normalizedWeek) || normalizedWeek < 1 || normalizedWeek > 42) {
+      return res.status(400).json({ message: 'Week must be a number between 1 and 42.' });
+    }
+    if (typeof req.body.message !== 'string' || !req.body.message.trim()) {
+      return res.status(400).json({ message: 'Please add a message to your post.' });
+    }
+    if (typeof trimester !== 'string' || !trimester.trim()) {
+      return res.status(400).json({ message: 'Please select a trimester.' });
+    }
+    if (typeof req.body.dueDate !== 'string' || !req.body.dueDate.trim()) {
+      return res.status(400).json({ message: 'Please enter your due date.' });
+    }
+    if (typeof imageURL !== 'string') {
+      return res.status(400).json({ message: 'The selected image is invalid.' });
+    }
+
     const post = await Post.create({
       userId,
-      imageURL: req.body.imageURL || '',
-      message: req.body.message,
-      Day: req.body.Day,
-      Week: req.body.Week,
-      Trimester: req.body.Trimester,
+      imageURL,
+      message: req.body.message.trim(),
+      Day: normalizedDay,
+      Week: normalizedWeek,
+      Trimester: trimester.trim(),
       dueDate: req.body.dueDate,
     });
 

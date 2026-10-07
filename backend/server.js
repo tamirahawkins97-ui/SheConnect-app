@@ -18,7 +18,7 @@ app.use(
 );
 
 //MIDDLEWARE
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
 
