@@ -297,7 +297,7 @@ export default function ProfilePage() {
     <div className="glam-page min-h-screen flex flex-col font-sans text-[#4a454e]">
       
       {/* ─── TOP HEADER BAR ─── */}
-      <header className="relative w-full border-b border-rose-200/60 bg-white/70 backdrop-blur-xl px-8 py-3.5 flex items-center justify-between shadow-sm z-30">
+      <header className="profile-header relative w-full border-b border-rose-200/60 bg-white/70 backdrop-blur-xl px-8 py-3.5 flex items-center justify-between shadow-sm z-30">
         <div className="w-10"></div>
 
         {/* Center Logo */}
@@ -327,7 +327,7 @@ export default function ProfilePage() {
       </header>
 
       {/* ─── PREGNANCY STAGES STRIP ─── */}
-      <section className="w-full max-w-6xl mx-auto px-8 py-5 border-b border-rose-200/50">
+      <section className="profile-stages-section w-full max-w-6xl mx-auto px-8 py-5 border-b border-rose-200/50">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-serif font-bold uppercase tracking-widest text-zinc-700">
             Pregnancy Stages
@@ -394,10 +394,10 @@ export default function ProfilePage() {
       </section>
 
       {/* ─── MAIN 3-BLOCK EDIT CONTAINER ─── */}
-      <main className="max-w-6xl w-full mx-auto px-8 py-8 flex-1 grid grid-cols-12 gap-8 items-stretch">
+      <main className="profile-editor-grid max-w-6xl w-full mx-auto px-8 py-8 flex-1 grid grid-cols-12 gap-8 items-stretch">
         
         {/* 1. LEFT: PROFILE PIC UPLOAD CARD */}
-        <div className="col-span-12 md:col-span-4 bg-white/75 backdrop-blur-xl border border-rose-100 rounded-3xl p-6 shadow-[0_10px_30px_rgba(244,63,94,0.05)] flex flex-col items-center justify-between">
+        <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-white/75 backdrop-blur-xl border border-rose-100 rounded-3xl p-6 shadow-[0_10px_30px_rgba(244,63,94,0.05)] flex flex-col items-center justify-between">
           <div className="w-full flex-1 flex flex-col items-center justify-center">
             
             {/* Hidden native file input */}
@@ -445,7 +445,7 @@ export default function ProfilePage() {
         </div>
 
         {/* 2. CENTER: PROFILE FORM FIELDS */}
-        <div className="col-span-12 md:col-span-4 bg-white/75 backdrop-blur-xl border border-rose-100 rounded-3xl p-6 shadow-[0_10px_30px_rgba(244,63,94,0.05)] flex flex-col justify-center gap-4">
+        <div className="col-span-12 md:col-span-6 lg:col-span-4 bg-white/75 backdrop-blur-xl border border-rose-100 rounded-3xl p-6 shadow-[0_10px_30px_rgba(244,63,94,0.05)] flex flex-col justify-center gap-4">
           <div>
             <label className="block text-xs font-medium text-zinc-500 mb-1 ml-2">Username</label>
             <input
@@ -487,7 +487,7 @@ export default function ProfilePage() {
         </div>
 
         {/* 3. RIGHT: SUPPORTING BACKGROUND IMAGE & CONTINUE BUTTON */}
-        <div className="col-span-12 md:col-span-4 relative rounded-3xl overflow-hidden border border-rose-100 shadow-[0_10px_30px_rgba(244,63,94,0.05)] group min-h-[300px]">
+        <div className="col-span-12 md:col-span-12 lg:col-span-4 relative rounded-3xl overflow-hidden border border-rose-100 shadow-[0_10px_30px_rgba(244,63,94,0.05)] group min-h-[300px]">
           {/* Supporting background image */}
           <img
             src={DEFAULT_SUPPORTING_IMAGE}
@@ -521,7 +521,7 @@ export default function ProfilePage() {
 
       </main>
 
-      <section className="mx-auto w-full max-w-6xl px-8 pb-12" aria-labelledby="my-posts-heading">
+      <section className="profile-posts-section mx-auto w-full max-w-6xl px-8 pb-12" aria-labelledby="my-posts-heading">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-rose-400">Your moments</p>

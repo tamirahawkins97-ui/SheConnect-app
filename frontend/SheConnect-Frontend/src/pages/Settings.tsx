@@ -104,7 +104,7 @@ export default function SettingsPage() {
     <div className="glam-page min-h-screen flex flex-col font-sans text-[#4a454e]">
       
       {/* ─── TOP HEADER ─── */}
-      <header className="relative w-full border-b border-rose-200/60 bg-white/70 backdrop-blur-xl px-8 py-3.5 flex items-center justify-between shadow-sm z-30">
+      <header className="settings-header relative w-full border-b border-rose-200/60 bg-white/70 backdrop-blur-xl px-8 py-3.5 flex items-center justify-between shadow-sm z-30">
         <button
           onClick={() => navigate(-1)}
           className="p-2 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100 transition-colors text-sm"
@@ -124,7 +124,7 @@ export default function SettingsPage() {
       </header>
 
       {/* ─── SETTINGS CONTAINER ─── */}
-      <main className="max-w-3xl w-full mx-auto px-6 py-10 flex-1 flex flex-col gap-8">
+      <main className="settings-main max-w-3xl w-full mx-auto px-6 py-10 flex-1 flex flex-col gap-8">
         
         <div>
           <span className="text-xs uppercase tracking-widest text-rose-400 font-semibold">Preferences</span>

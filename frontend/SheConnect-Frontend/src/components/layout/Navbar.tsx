@@ -11,11 +11,11 @@ const routes = [
 
 function NavBar() {
   return (
-    <header className="sticky top-0 z-50 border-b border-rose-100/80 bg-white/80 shadow-[0_4px_18px_rgba(244,63,94,0.04)] backdrop-blur-xl">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 sm:px-6 lg:flex-nowrap lg:px-8">
+    <header className="app-navbar sticky top-0 z-50 border-b border-rose-100/80 bg-white/80 shadow-[0_4px_18px_rgba(244,63,94,0.04)] backdrop-blur-xl">
+      <div className="app-navbar-inner mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-3 sm:px-6 lg:flex-nowrap lg:px-8">
         <Brand to="/feed" className="shrink-0" />
 
-        <nav className="w-full overflow-x-auto lg:w-auto" aria-label="Main navigation">
+        <nav className="app-navbar-nav w-full overflow-x-auto lg:w-auto" aria-label="Main navigation">
           <ul className="flex min-w-max items-center justify-center gap-1.5 text-sm font-medium tracking-wide sm:gap-2">
             {routes.map((route) => (
               <li key={route.to}>

@@ -432,3 +432,252 @@ h1, h2, h3, .font-glam {
   font-weight: 700;
   text-shadow: 0 1px 8px rgba(241, 201, 130, 0.2);
 }
+
+/* ─── MOBILE & TABLET LAYOUT ─── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  scroll-padding-top: 5rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 639px) {
+  .glam-page {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .app-navbar-inner {
+    gap: 0.5rem;
+    padding-inline: 0.75rem;
+    padding-top: 0.65rem;
+    padding-bottom: 0.65rem;
+  }
+
+  .app-navbar .brand-mark {
+    width: 2.65rem;
+    height: 2.65rem;
+    flex-basis: 2.65rem;
+  }
+
+  .app-navbar .brand-wordmark {
+    font-size: 1.2rem;
+  }
+
+  .app-navbar .brand-tagline {
+    font-size: 0.48rem;
+    letter-spacing: 0.12em;
+  }
+
+  .app-navbar-nav {
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .app-navbar-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .app-navbar-nav ul {
+    justify-content: flex-start;
+    padding-block: 0.12rem;
+  }
+
+  .app-navbar-nav a {
+    min-height: 2.65rem;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  .profile-header,
+  .settings-header {
+    padding-inline: 1rem;
+  }
+
+  .profile-header > div:nth-child(2) {
+    gap: 0.4rem;
+  }
+
+  .profile-header > div:nth-child(2) img {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+
+  .profile-header > div:nth-child(2) span {
+    font-size: 1.2rem;
+  }
+
+  .profile-stages-section {
+    padding-inline: 1rem;
+  }
+
+  .profile-editor-grid,
+  .profile-posts-section {
+    padding-inline: 1rem;
+  }
+
+  .profile-editor-grid {
+    gap: 1rem;
+    padding-top: 1.25rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .profile-editor-grid > div {
+    padding: 1rem;
+  }
+
+  .profile-editor-grid > div:first-child [class*='w-52'] {
+    width: min(13rem, 100%);
+    height: auto;
+    aspect-ratio: 1;
+  }
+
+  .settings-main {
+    gap: 1.25rem;
+    padding: 1.5rem 1rem;
+  }
+
+  .settings-main form > div,
+  .settings-main > section,
+  .settings-main > div:last-child {
+    padding: 1.15rem;
+    border-radius: 1.5rem;
+  }
+
+  .settings-header > a {
+    gap: 0.35rem;
+  }
+
+  .settings-header > a img {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .settings-header > a span {
+    font-size: 1.2rem;
+  }
+
+  .social-hub-page {
+    padding: 1.25rem 0.75rem;
+  }
+
+  .social-hub-panel {
+    min-height: max(34rem, calc(100dvh - 17rem));
+    border-radius: 1.25rem;
+  }
+
+  .social-hub-panel > aside {
+    min-height: max(34rem, calc(100dvh - 17rem));
+  }
+
+  .social-hub-panel header {
+    padding-inline: 0.8rem;
+  }
+
+  .social-hub-panel .chat-message-list {
+    padding-inline: 0.8rem;
+  }
+
+  .social-hub-panel .chat-composer {
+    padding-inline: 0.65rem;
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .social-hub-panel .chat-message-bubble {
+    overflow-wrap: anywhere;
+  }
+
+  .profile-posts-section form {
+    min-width: 0;
+  }
+
+  .glam-card {
+    padding: 1.25rem;
+    border-radius: 1.5rem;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .profile-editor-grid {
+    gap: 1.25rem;
+    padding-inline: 1.5rem;
+  }
+
+  .profile-editor-grid > div {
+    padding: 1.25rem;
+  }
+
+  .profile-stages-section,
+  .profile-posts-section {
+    padding-inline: 1.5rem;
+  }
+
+  .settings-main {
+    padding: 2rem 1.5rem;
+  }
+
+  .social-hub-page {
+    padding-inline: 1rem;
+  }
+}
+
+@media (max-width: 359px) {
+  .profile-stages-section > div:last-child {
+    gap: 0.35rem;
+  }
+
+  .profile-stages-section > div:last-child > div {
+    justify-content: flex-start;
+  }
+
+  .profile-stages-section > div:last-child > div > button {
+    flex: 0 0 auto;
+  }
+
+  .social-hub-panel .chat-message-bubble {
+    max-width: 100%;
+    padding: 0.65rem 0.8rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -370,7 +370,7 @@ function SocialHub() {
   }
 
   return (
-    <main className="glam-page min-h-[calc(100vh-5rem)] px-4 py-7 text-zinc-700 sm:px-6 lg:px-8">
+    <main className="social-hub-page glam-page min-h-[calc(100vh-5rem)] px-4 py-7 text-zinc-700 sm:px-6 lg:px-8">
       <section className="mx-auto max-w-7xl">
         <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -393,7 +393,7 @@ function SocialHub() {
           </button>
         </header>
 
-        <div className="grid min-h-[min(72vh,760px)] overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/75 shadow-[0_10px_30px_rgba(244,63,94,0.06)] backdrop-blur-xl md:grid-cols-[330px_minmax(0,1fr)]">
+        <div className="social-hub-panel grid min-h-[min(72vh,760px)] overflow-hidden rounded-[1.75rem] border border-white/90 bg-white/75 shadow-[0_10px_30px_rgba(244,63,94,0.06)] backdrop-blur-xl md:grid-cols-[330px_minmax(0,1fr)]">
           <aside className={`${activeId ? 'hidden md:flex' : 'flex'} min-h-[min(72vh,760px)] flex-col border-b border-rose-100/80 bg-white/70 md:border-b-0 md:border-r`}>
             <div className="border-b border-rose-100/80 px-5 pb-4 pt-5">
               <div className="mb-4 flex items-center justify-between">
