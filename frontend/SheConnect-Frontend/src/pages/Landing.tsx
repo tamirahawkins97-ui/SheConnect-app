@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import { setToken } from '../utils/auth';
+import Brand from '../components/layout/Brand';
 
 type AuthResponse = { message: string; token: string };
 
@@ -44,13 +45,14 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center p-6 relative overflow-hidden">
+    <div className="glam-page min-h-screen relative flex items-center justify-center overflow-hidden p-6">
       {/* Soft Pink Ambient Glow Orbs */}
       <div className="absolute top-1/4 left-1/3 w-80 h-80 bg-rose-200/40 rounded-full blur-3xl pointer-events-none -z-10 animate-pulse" />
       <div className="absolute bottom-1/4 right-1/3 w-96 h-96 bg-pink-100/50 rounded-full blur-3xl pointer-events-none -z-10" />
 
       {/* Main Glass Card */}
-      <div className="w-full max-w-md bg-white/75 backdrop-blur-xl border border-rose-100 rounded-3xl p-8 shadow-[0_20px_50px_rgba(244,63,94,0.08)] relative">
+      <div className="glam-card relative w-full max-w-md p-8">
+        <Brand to="/" className="mx-auto mb-7 w-fit" />
         <div className="text-center mb-8">
           <span className="text-xs uppercase tracking-widest text-rose-400 font-semibold">Welcome Darling</span>
           <h1 className="text-3xl font-glam text-zinc-800 mt-1 mb-2">
@@ -77,7 +79,7 @@ export default function LandingPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Arabella"
-                className="w-full px-5 py-3 rounded-full bg-rose-50/40 border border-rose-100 text-zinc-700 placeholder-zinc-300 text-sm focus:outline-none focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100/50 transition-all"
+                className="glam-input"
               />
             </div>
           )}
@@ -90,7 +92,7 @@ export default function LandingPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@domain.com"
-              className="w-full px-5 py-3 rounded-full bg-rose-50/40 border border-rose-100 text-zinc-700 placeholder-zinc-300 text-sm focus:outline-none focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100/50 transition-all"
+              className="glam-input"
             />
           </div>
 
@@ -102,7 +104,7 @@ export default function LandingPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-5 py-3 rounded-full bg-rose-50/40 border border-rose-100 text-zinc-700 placeholder-zinc-300 text-sm focus:outline-none focus:border-rose-300 focus:bg-white focus:ring-4 focus:ring-rose-100/50 transition-all"
+              className="glam-input"
             />
           </div>
 
@@ -110,7 +112,7 @@ export default function LandingPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-4 py-3.5 px-6 rounded-full bg-gradient-to-r from-rose-400 via-pink-400 to-rose-500 text-white font-medium text-sm tracking-wide shadow-[0_8px_20px_rgba(244,63,94,0.25)] transition-all duration-300 hover:shadow-[0_10px_25px_rgba(244,63,94,0.4)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            className="glam-btn-primary mt-4 w-full disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Please wait...' : isRegister ? 'Join Now ✨' : 'Sign In ✨'}
           </button>

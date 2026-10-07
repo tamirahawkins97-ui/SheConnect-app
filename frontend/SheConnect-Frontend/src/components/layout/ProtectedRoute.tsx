@@ -1,12 +1,11 @@
 // src/components/layout/ProtectedRoute.tsx
 import { useEffect, useState } from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet } from 'react-router-dom';
 import { isTokenValid, removeToken } from '../../utils/auth';
 import { apiFetch } from '../../utils/api';
 import type { User } from '../../types';
 
  function ProtectedRoute() {
-  const location = useLocation();
   const [loading, setLoading] = useState<boolean>(true);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
@@ -43,9 +42,9 @@ import type { User } from '../../types';
     );
   }
 
-  // 4. Kick unauthorized users to /auth, saving where they were trying to go
+  // 4. Return unauthenticated visitors to the sign-in landing page.
   if (!isAuthenticated) {
-    return <Navigate to="/auth" state={{ from: location }} replace />;
+    return <Navigate to="/" state={{ from: location }} replace />;
   }
 
   // 5. User is authenticated, render the requested child route

@@ -275,7 +275,7 @@ export default function Feed() {
     : emptyDraft;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#fbf5f7] via-[#f7edf2] to-[#f4e6ec] px-4 pb-20 text-zinc-700 sm:px-6">
+    <div className="glam-page min-h-screen px-4 pb-20 text-zinc-700 sm:px-6">
       <header className="relative mx-auto grid max-w-7xl grid-cols-[1fr_auto_1fr] items-center border-b border-rose-100/80 py-5">
         <div />
         <Link className="text-center no-underline" to="/feed" aria-label="SheConnect feed">

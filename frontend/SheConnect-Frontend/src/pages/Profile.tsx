@@ -294,7 +294,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#fbf5f7] via-[#f7edf2] to-[#f4e6ec] text-[#4a454e] flex flex-col font-sans">
+    <div className="glam-page min-h-screen flex flex-col font-sans text-[#4a454e]">
       
       {/* ─── TOP HEADER BAR ─── */}
       <header className="relative w-full border-b border-rose-200/60 bg-white/70 backdrop-blur-xl px-8 py-3.5 flex items-center justify-between shadow-sm z-30">

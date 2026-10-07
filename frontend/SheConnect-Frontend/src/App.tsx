@@ -11,6 +11,11 @@ import Feed from './pages/Feed';
 import Auth from './pages/Auth';
 import Settings from './pages/Settings';
 import CreatePostCard from './components/feed/CreatePostCard';
+import { isTokenValid } from './utils/auth';
+
+function LandingRoute() {
+  return isTokenValid() ? <Navigate to="/feed" replace /> : <Home />;
+}
 
 function AuthenticatedLayout() {
   useEffect(() => {
@@ -57,7 +62,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* Public */}
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<LandingRoute />} />
         <Route path="/auth" element={<Auth />} />
 
         {/* Navigation and app pages are only shown after session verification */}

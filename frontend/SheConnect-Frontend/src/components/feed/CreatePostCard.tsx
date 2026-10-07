@@ -113,7 +113,7 @@ export default function CreatePostCard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#fbf5f7] via-[#f7edf2] to-[#f4e6ec] px-4 pb-16 text-zinc-700 sm:px-6">
+    <div className="glam-page min-h-screen px-4 pb-16 text-zinc-700 sm:px-6">
       <header className="mx-auto grid max-w-5xl grid-cols-[1fr_auto_1fr] items-center border-b border-rose-100/80 py-5">
         <button
           className="inline-flex size-11 items-center justify-center gap-1 rounded-full border border-rose-100 bg-white/80 text-rose-500 shadow-sm transition hover:scale-105 hover:shadow-[0_0_15px_rgba(244,63,94,0.35)] active:scale-95"

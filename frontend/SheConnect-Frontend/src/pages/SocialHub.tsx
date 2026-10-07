@@ -358,7 +358,7 @@ function SocialHub() {
   }
 
   return (
-    <main className="min-h-[calc(100vh-5rem)] bg-[radial-gradient(ellipse_at_top_left,_rgba(255,228,230,0.62),_transparent_42%),linear-gradient(145deg,#fffdfc_0%,#fff7f7_52%,#fffaf4_100%)] px-4 py-7 text-zinc-700 sm:px-6 lg:px-8">
+    <main className="glam-page min-h-[calc(100vh-5rem)] px-4 py-7 text-zinc-700 sm:px-6 lg:px-8">
       <section className="mx-auto max-w-7xl">
         <header className="mb-5 flex flex-wrap items-end justify-between gap-4">
           <div>
