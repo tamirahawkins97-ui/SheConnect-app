@@ -6,9 +6,7 @@ const morgan = require('morgan');
 const connectDB = require('./db/connection');
 const PORT = process.env.PORT || 1111;
 
-//CORS Configuration
 const cors = require('cors');
-
 
 const allowedOrigins = new Set(
     (process.env.CORS_ORIGINS || 'http://localhost:5173')
