@@ -18,19 +18,21 @@ SheConnect is a full-stack maternal community application for sharing pregnancy 
 - Backend: Node.js, Express, and Mongoose.
 - Database: MongoDB.
 
-## Deploy to Render
+## Deploy to Render (Dashboard)
 
-The root [`render.yaml`](render.yaml) defines a single Render Web Service that builds the Vite frontend and serves it with the Express backend. The frontend uses relative `/api` requests, so production does not need a separate frontend service or Vite proxy.
+Deploy as one Render **Web Service** from the repository root. The root build script installs backend dependencies inside `backend/`, installs and builds the frontend, and the backend serves the built frontend from `frontend/SheConnect-Frontend/dist`.
 
-1. Push this repository to GitHub and create a Render Blueprint from the repository.
-2. In the Blueprint setup, provide `MONGO_URI` for a production MongoDB database. Render generates `JWT_SECRET`; keep it private and rotate any credential that has been exposed.
-3. Deploy the `sheconnect-app` web service. Render runs `npm run build`, starts the root `index.js` entry point, and checks `/health`.
-4. If using a custom domain or serving the frontend separately, set `CORS_ORIGINS` in Render to the exact comma-separated browser origin(s), including `https://`. The blueprint default allows the Render service's default URL.
-5. Configure MongoDB network access so the Render service can reach the database. Restrict database access to Render's outbound IP ranges where practical; avoid broad public access for production.
+In Render's dashboard, configure:
 
-The service requires `MONGO_URI` and `JWT_SECRET`; it binds to Render's assigned `PORT`. Never commit `.env` files or put credentials in frontend build variables.
+- **Root Directory:** leave blank (repository root).
+- **Build Command:** `npm run build`
+- **Start Command:** `npm start` (runs `npm start --prefix backend`)
+- **Health Check Path:** `/health`
+- **Environment:** `NODE_ENV=production`, `MONGO_URI` (production MongoDB connection string), `JWT_SECRET` (new, randomly generated secret), and `CORS_ORIGINS=https://<your-render-service>.onrender.com`. If you use a custom domain, include its exact `https://` origin in `CORS_ORIGINS` as well.
 
-If deploying a Web Service manually instead of using the Blueprint, set **Root Directory** to the repository root, **Build Command** to `npm run build`, and **Start Command** to `node index.js` (or `npm start`). Do not use `node .` unless the root package metadata is included in the deployed commit.
+Set these under the service's private Environment settings; never place secrets in source files, build commands, or frontend variables. Rotate any credential previously exposed. Ensure MongoDB network access permits the Render service to connect.
+
+Do not set the Render Root Directory to `backend`: the frontend build lives in a sibling directory. Do not use `node index.js` as the dashboard Start Command unless the Build Command has already installed backend dependencies. The recommended commands above install those dependencies in `backend/` and start the backend from that same package directory.
 
 ## Run locally
 

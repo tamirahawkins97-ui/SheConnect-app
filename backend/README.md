@@ -16,7 +16,7 @@ The SheConnect backend is a Node.js, Express, and MongoDB API for user authentic
 
 ## Setup and tests
 
-From `backend/`, install dependencies with `npm install` and create a local `.env` containing `MONGO_URI`, `JWT_SECRET`, and `CORS_ORIGINS=http://localhost:5173`. Use a cryptographically random JWT secret and never commit `.env`. The Render Blueprint at the repository root sets the production environment, builds the frontend, and serves it from this Express service.
+From `backend/`, install dependencies with `npm install` and create a local `.env` containing `MONGO_URI`, `JWT_SECRET`, and `CORS_ORIGINS=http://localhost:5173`. Use a cryptographically random JWT secret and never commit `.env`. For the single-service Render deployment described in the root README, runtime dependencies are installed from the root package manifest.
 
 For a separate frontend host, set `CORS_ORIGINS` to its exact browser origin(s), comma-separated. Same-origin frontend requests to the combined Render service do not require CORS.
 
