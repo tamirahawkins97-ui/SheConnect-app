@@ -18,74 +18,39 @@ SheConnect is a full-stack maternal community application for sharing pregnancy 
 - Backend: Node.js, Express, and Mongoose.
 - Database: MongoDB.
 
-## Deploy to Render (Dashboard)
+## Live application
 
-Deploy as one Render **Web Service** from the repository root. The root build script installs backend dependencies inside `backend/`, installs and builds the frontend, and the backend serves the built frontend from `frontend/SheConnect-Frontend/dist`.
+Open the deployed SheConnect application at [https://sheconnect-app-1.onrender.com/](https://sheconnect-app-1.onrender.com). Render's free service may take a short time to wake up after a period of inactivity.
 
-In Render's dashboard, configure:
+## Deployment setup
 
-- **Root Directory:** leave blank (repository root).
+SheConnect is deployed as one Render **Web Service** from the repository root. Express serves the built frontend and the `/api` endpoints from the same origin.
+
+### Render dashboard configuration
+
+Create or update a Web Service connected to this GitHub repository and configure:
+
+- **Root Directory:** leave blank so Render uses the repository root.
 - **Build Command:** `npm run build`
-- **Start Command:** `npm start` (runs `npm start --prefix backend`)
+- **Start Command:** `npm start`
 - **Health Check Path:** `/health`
-- **Environment:** `NODE_ENV=production`, `MONGO_URI` (production MongoDB connection string), `JWT_SECRET` (new, randomly generated secret), and `CORS_ORIGINS=https://<your-render-service>.onrender.com`. If you use a custom domain, include its exact `https://` origin in `CORS_ORIGINS` as well.
 
-Set these under the service's private Environment settings; never place secrets in source files, build commands, or frontend variables. Rotate any credential previously exposed. Ensure MongoDB network access permits the Render service to connect.
+Add these environment variables in the Render service's Environment settings:
 
-Do not set the Render Root Directory to `backend`: the frontend build lives in a sibling directory. Do not use `node index.js` as the dashboard Start Command unless the Build Command has already installed backend dependencies. The recommended commands above install those dependencies in `backend/` and start the backend from that same package directory.
+- `NODE_ENV` — `production`
+- `MONGO_URI` — the MongoDB connection string for the production database.
+- `JWT_SECRET` — a new, randomly generated secret used to sign login tokens.
+- `CORS_ORIGINS` — `https://sheconnect-app.onrender.com`; if using a custom frontend domain, include its exact HTTPS origin.
 
-## Run locally
+The build command installs the backend dependencies in `backend/`, installs the frontend dependencies, and creates the production frontend bundle. The start command starts the Express server, which serves that bundle and the API. The `/health` endpoint is used by Render to check that the service is responding.
 
-Requirements: Node.js `>=20.19.0`, npm, and a running MongoDB instance.
+Configure MongoDB network access to allow the Render service to connect. Keep database credentials and `JWT_SECRET` only in Render's private environment settings; do not commit `.env` files or include secrets in the frontend.
 
-1. Configure the backend:
+### Local development setup
 
-   ```powershell
-   cd backend
-   npm install
-   ```
+Requirements: Node.js `>=20.19.0`, npm, and MongoDB.
 
-   Create `backend/.env` with `MONGO_URI`, a strong random `JWT_SECRET`, and `CORS_ORIGINS=http://localhost:5173`. Do not commit this file.
-
-2. In one terminal, start the backend:
-
-   ```powershell
-   cd backend
-   npm start
-   ```
-
-3. In another terminal, start the frontend:
-
-   ```powershell
-   cd frontend/SheConnect-Frontend
-   npm install
-   npm run dev
-   ```
-
-   Open `http://localhost:5173`. Vite proxies `/api` requests to the backend at `http://localhost:1111`.
-
-For other production hosting arrangements, configure the frontend hosting/reverse proxy to route `/api` to the backend and set `CORS_ORIGINS` to the deployed frontend origin.
-
-## Validation
-
-Run the backend controller tests:
-
-```powershell
-cd backend
-npm test
-```
-
-The backend tests use Node's built-in test runner and mocked model methods; they do not require MongoDB. Validate the frontend:
-
-```powershell
-cd frontend/SheConnect-Frontend
-npm run lint
-npm run build
-```
-
-For backend API and database integration, start the app with a configured MongoDB database and verify the user, post, comment, and conversation flows in the running application.
-
-## Documentation
-
-- [Frontend setup, routes, and API connectivity](frontend/SheConnect-Frontend/README.md)
-- [Backend setup, authentication, REST API, and CRUD behavior](backend/README.md)
+1. Create `backend/.env` with `MONGO_URI`, `JWT_SECRET`, and `CORS_ORIGINS=http://localhost:5173`. Keep this file local and uncommitted.
+2. From the repository root, run `npm run build` to install dependencies and build the frontend.
+3. Run `npm start` to start the backend. In another terminal, run `npm run dev` from `frontend/SheConnect-Frontend`.
+4. Open `http://localhost:5173`. Vite proxies `/api` requests to the backend at `http://localhost:1111`.
