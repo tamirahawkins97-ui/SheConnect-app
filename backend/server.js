@@ -25,7 +25,7 @@ app.use(cors(corsOptions));
 
 //MIDDLEWARE
 // 1. Tell Express where to find static assets (the 'build' folder)
-app.use(express.static(path.join(__dirname, 'client/build')));
+app.use(express.static(path.join(__dirname, '/frontend/SheConnect-Frontend/dist')));
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
 app.use(express.urlencoded({ extended: true }));
@@ -48,7 +48,7 @@ app.use('/api/posts', PostRoutes);
 // 2. A "catch-all" route to send index.html for any other request.
 // This allows React Router to handle client-side navigation.
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  res.sendFile(path.join(__dirname, '/frontend/SheConnect-Frontend/dist', 'index.html'));
 });
 
 //PORT 
