@@ -4,12 +4,12 @@
   "description": "SheConnect is a full-stack maternal community application for sharing pregnancy and family moments, discussing posts, and connecting with other members through direct and group conversations. Members can manage their profile, find their own posts by ID, choose light or dark appearance, and control presence and direct-message preferences.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "npm test --prefix backend",
     "install-backend": "npm install --prefix backend",
     "install-frontend": "npm install --prefix frontend/SheConnect-Frontend",
     "build-frontend": "npm run build --prefix frontend/SheConnect-Frontend",
     "build": "npm run install-backend && npm run install-frontend && npm run build-frontend",
-    "start": "node backend/server.js"
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",

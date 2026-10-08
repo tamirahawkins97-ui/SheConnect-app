@@ -18,6 +18,20 @@ SheConnect is a full-stack maternal community application for sharing pregnancy 
 - Backend: Node.js, Express, and Mongoose.
 - Database: MongoDB.
 
+## Deploy to Render
+
+The root [`render.yaml`](render.yaml) defines a single Render Web Service that builds the Vite frontend and serves it with the Express backend. The frontend uses relative `/api` requests, so production does not need a separate frontend service or Vite proxy.
+
+1. Push this repository to GitHub and create a Render Blueprint from the repository.
+2. In the Blueprint setup, provide `MONGO_URI` for a production MongoDB database. Render generates `JWT_SECRET`; keep it private and rotate any credential that has been exposed.
+3. Deploy the `sheconnect-app` web service. Render runs `npm run build`, starts the root `index.js` entry point, and checks `/health`.
+4. If using a custom domain or serving the frontend separately, set `CORS_ORIGINS` in Render to the exact comma-separated browser origin(s), including `https://`. The blueprint default allows the Render service's default URL.
+5. Configure MongoDB network access so the Render service can reach the database. Restrict database access to Render's outbound IP ranges where practical; avoid broad public access for production.
+
+The service requires `MONGO_URI` and `JWT_SECRET`; it binds to Render's assigned `PORT`. Never commit `.env` files or put credentials in frontend build variables.
+
+If deploying a Web Service manually instead of using the Blueprint, set **Root Directory** to the repository root, **Build Command** to `npm run build`, and **Start Command** to `node index.js` (or `npm start`). Do not use `node .` unless the root package metadata is included in the deployed commit.
+
 ## Run locally
 
 Requirements: Node.js `>=20.19.0`, npm, and a running MongoDB instance.
@@ -27,10 +41,9 @@ Requirements: Node.js `>=20.19.0`, npm, and a running MongoDB instance.
    ```powershell
    cd backend
    npm install
-   Copy-Item .env.example .env
    ```
 
-   Update `backend/.env` with a valid `MONGO_URI`, a strong random `JWT_SECRET`, and `CORS_ORIGINS` containing the frontend origin (local development defaults to `http://localhost:5173`).
+   Create `backend/.env` with `MONGO_URI`, a strong random `JWT_SECRET`, and `CORS_ORIGINS=http://localhost:5173`. Do not commit this file.
 
 2. In one terminal, start the backend:
 
@@ -49,7 +62,7 @@ Requirements: Node.js `>=20.19.0`, npm, and a running MongoDB instance.
 
    Open `http://localhost:5173`. Vite proxies `/api` requests to the backend at `http://localhost:1111`.
 
-For production, configure the frontend hosting/reverse proxy to route `/api` to the backend and set `CORS_ORIGINS` to the deployed frontend origin. Do not commit `.env` files or use development secrets in production.
+For other production hosting arrangements, configure the frontend hosting/reverse proxy to route `/api` to the backend and set `CORS_ORIGINS` to the deployed frontend origin.
 
 ## Validation
 

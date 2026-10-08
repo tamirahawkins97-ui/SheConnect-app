@@ -16,7 +16,9 @@ The SheConnect backend is a Node.js, Express, and MongoDB API for user authentic
 
 ## Setup and tests
 
-From `backend/`, install dependencies with `npm install`, copy `.env.example` to `.env`, then set `MONGO_URI` and replace `JWT_SECRET` with a cryptographically random value. Set `CORS_ORIGINS` to a comma-separated list of exact frontend origins; local development defaults to `http://localhost:5173`. The frontend host must route `/api` requests to this backend in production.
+From `backend/`, install dependencies with `npm install` and create a local `.env` containing `MONGO_URI`, `JWT_SECRET`, and `CORS_ORIGINS=http://localhost:5173`. Use a cryptographically random JWT secret and never commit `.env`. The Render Blueprint at the repository root sets the production environment, builds the frontend, and serves it from this Express service.
+
+For a separate frontend host, set `CORS_ORIGINS` to its exact browser origin(s), comma-separated. Same-origin frontend requests to the combined Render service do not require CORS.
 
 Run `npm test` to execute the backend controller tests. The tests use Node's built-in test runner and mocked model methods, so they do not require a running MongoDB instance. End-to-end verification still requires a configured MongoDB database and running frontend/backend.
 
