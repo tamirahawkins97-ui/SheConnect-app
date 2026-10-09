@@ -6,6 +6,7 @@ const User = require('../models/User');
 const Post = require('../models/Post');
 const Comment = require('../models/Comment');
 
+//ensures the server loads sensitive keys and database credentials from root env file.
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 const DEMO_PASSWORD = 'SeedPassword123!';
